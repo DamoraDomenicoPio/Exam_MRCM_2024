@@ -12,7 +12,7 @@ from tf2_geometry_msgs import TransformStamped as TF2TransformStamped
 import math
 import argparse
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
-from utils.waypoint
+from utils.waypoint import Waypoint
 
 
 class Navigation(Node):
