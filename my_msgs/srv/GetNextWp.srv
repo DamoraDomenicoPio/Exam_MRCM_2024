@@ -1,0 +1,7 @@
+string point_name
+int64 direction
+string sign
+---
+float64 next_x
+float64 next_y
+int64 next_direction

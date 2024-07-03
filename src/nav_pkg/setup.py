@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "navigation = nav_pkg.navigation:main",
+            "qr_code_reader = nav_pkg.qr_code_reader:main",
         ],
     },
 )
