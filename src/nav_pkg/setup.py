@@ -22,6 +22,8 @@ setup(
         'console_scripts': [
             "navigation = nav_pkg.navigation:main",
             "qr_code_reader = nav_pkg.qr_code_reader:main",
+            "next_waypoint = nav_pkg.next_waypoint:main",
+            "dummy_client = nav_pkg.dummy_client:main"
         ],
     },
 )
