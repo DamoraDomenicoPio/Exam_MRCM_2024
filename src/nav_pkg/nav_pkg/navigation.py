@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 from rclpy.executors import MultiThreadedExecutor
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions, TurtleBot4Navigator, TaskResult
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
@@ -16,6 +16,7 @@ class Navigation(Node):
         # start_wp_cb_group = ReentrantCallbackGroup()
         end_wp_cb_group = ReentrantCallbackGroup()
         goal_reached_cb_group = ReentrantCallbackGroup()
+        road_sign_cb_group = ReentrantCallbackGroup()
 
         qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
@@ -27,6 +28,7 @@ class Navigation(Node):
         # Subscribers
         # # self.sub_start_wp = self.create_subscription(WaypointMsg, "/start_wp", self.start_wp_callback, qos_profile, callback_group=start_wp_cb_group)
         self.sub_end_wp = self.create_subscription(WaypointMsg, "/end_wp", self.end_wp_callback, qos_profile, callback_group=end_wp_cb_group)
+        self.sub_road_sign = self.create_subscription(String, "/road_sign", self.road_sign_callback , qos_profile, callback_group=road_sign_cb_group)
         # Publishers
         self.pub_goal_reached = self.create_publisher(Bool, '/goal_reached', 10, callback_group=goal_reached_cb_group)
         
@@ -39,17 +41,10 @@ class Navigation(Node):
         self._navigator = TurtleBot4Navigator()
 
         self._navigator.waitUntilNav2Active()
-        print("AAAAA 3")
 
-        print("AAAAA 1")
-
-        initial_pose = self._navigator.getPoseStamped([-3.0, -0.02], TurtleBot4Directions.EAST)
-
-
-        print("AAAAA 2")
+        initial_pose = self._navigator.getPoseStamped([5.0, -0.02], TurtleBot4Directions.SOUTH)
         
         self._navigator.setInitialPose(initial_pose)
-        print("AAAAA")
 
 
         
@@ -72,6 +67,16 @@ class Navigation(Node):
         elif num == 90:
             return TurtleBot4Directions.WEST
 
+
+    def road_sign_callback(self, msg):
+        road_sign = msg.data
+        print("Road sign detected:", road_sign)
+        if road_sign == 'None':
+            self._navigator.cancelTask()
+        else:
+            self._navigator.cancelTask()
+            # Calculate next_wp
+            # publish end_wp
 
     def start_wp_callback(self, msg):
         if not self._is_set_start_wp and not self._is_main_running:
@@ -122,6 +127,7 @@ class Navigation(Node):
 
         goal_pose = self._navigator.getPoseStamped([self._end_wp.get_x(), self._end_wp.get_y()], self._end_wp.get_direction())
         self._navigator.startToPose(goal_pose)
+        self._navigator.cancelTask()
 
         print("Task is complete:", self._navigator.getResult(), self._navigator.getFeedback())
 

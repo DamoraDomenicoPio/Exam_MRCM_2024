@@ -33,8 +33,8 @@ cd ~/Scrivania/Exam_MRCM_2024
 3. Check if you are connected to Turtlebot with these commands
 ```sh
 source ~/.bashrc
-– ros2 daemon stop; ros2 daemon start
-– ros2 topic list
+ros2 daemon stop; ros2 daemon start
+ros2 topic list
 ```
 
 ## Load map
@@ -79,5 +79,5 @@ Try navigation node changing startpoint in code e giving end point through this 
 ```sh
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
-ros2 topic pub -1 /end_wp my_msgs/msg/WaypointMsg "{x: 0.0, y: -10.0, direction: 'est'}"
+ros2 topic pub -1 /end_wp my_msgs/msg/WaypointMsg "{x: -3.0, y: -10.0, direction: 0}"
 ```
