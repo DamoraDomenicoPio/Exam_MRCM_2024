@@ -19,6 +19,32 @@ class Junctions():
         self.l = JunctionPoint(JunctionCoordinates.L, 'L')
         self.initialize_graph()  # aggiunge ai singoli incroci informazioni sugli incroci limitrofi 
 
+    def get_junction_by_name(self, name): 
+        j = None 
+        if name == 'A':
+            j = self.a
+        elif name == 'B':
+            j = self.b
+        elif name == 'C':
+            j = self.c
+        elif name == 'D':
+            j = self.d
+        elif name == 'E':
+            j = self.e
+        elif name == 'F':
+            j = self.f
+        elif name == 'G':
+            j = self.g
+        elif name == 'H':
+            j = self.h
+        elif name == 'I':
+            j = self.i
+        elif name == 'L':
+            j = self.l
+        else: 
+            raise Exception('Questo incrocio non esiste, scegli fra A, B, C, D, E, F, G, H, I e L (in maiuscolo)')
+        return j
+
         
     def initialize_graph(self): 
         '''Per ogni incocio, specifica quale incrocio è a nord, quale è a sud, quale è a est e quale è a nord'''
