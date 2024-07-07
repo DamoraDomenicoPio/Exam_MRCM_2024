@@ -1,4 +1,5 @@
-
+from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
+from constants import Offsets
 
 class JunctionPoint(): 
 
@@ -15,6 +16,45 @@ class JunctionPoint():
         self._sud = None
         self._ovest = None
 
+    def is_in_junction(self, x, y): 
+        result = True
+        if not x < self.get_bbox_x(TurtleBot4Directions.SOUTH): 
+            result = False
+        if not x > self.get_bbox_x(TurtleBot4Directions.NORTH): 
+            result = False
+        if not y > self.get_bbox_y(TurtleBot4Directions.EAST): 
+            result = False
+        if not y < self.get_bbox_y(TurtleBot4Directions.WEST): 
+            result = False
+        return result
+
+
+    def _get_bbox_point(self, direction):
+        assert isinstance(direction, TurtleBot4Directions), "La direzione deve essere un'istanza della classe TurtleBot4Directions"
+        if direction == TurtleBot4Directions.NORTH:
+            y = self.get_y()
+            x = self.get_x() - Offsets.x_offset.value
+        elif direction == TurtleBot4Directions.SOUTH:
+            y = self.get_y()
+            x = self.get_x() + Offsets.x_offset.value
+        elif direction == TurtleBot4Directions.EAST: 
+            y = self.get_y() - Offsets.y_offset.value
+            x = self.get_x() 
+        elif direction == TurtleBot4Directions.WEST: 
+            y = self.get_y() + Offsets.y_offset.value
+            x = self.get_x() 
+        return x, y
+    
+    def get_bbox_x(self, direction): 
+        x, _ = self._get_bbox_point(direction)
+        return x
+    
+    def get_bbox_y(self, direction): 
+        _, y = self._get_bbox_point(direction)
+        return y
+    
+        
+    # Getter e setter
     
     def get_x(self): 
         return self._x
