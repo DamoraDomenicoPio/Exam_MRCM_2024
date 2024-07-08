@@ -56,6 +56,12 @@ cd ~/Scrivania/Exam_MRCM_2024
 ros2 launch turtlebot4_viz view_robot.launch.py
 ```
 
+## Run on simulation
+If you want run the program on the simulator, launch this:
+```sh
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py nav2:=true slam:=false localization:=true rviz:=true
+```
+
 ## Run your nodes
 ### Navigation node
 Run this command in another terminal.
