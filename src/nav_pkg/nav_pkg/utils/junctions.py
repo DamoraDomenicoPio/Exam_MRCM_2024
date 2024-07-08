@@ -2,6 +2,7 @@ from nav_pkg.utils.constants import Directions, Signs, JunctionCoordinates
 from nav_pkg.utils.waypoint import Waypoint
 from nav_pkg.utils.junction_point import JunctionPoint
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
+import sys
 
 class Junctions(): 
 
@@ -17,7 +18,41 @@ class Junctions():
         self.h = JunctionPoint(JunctionCoordinates.H, 'H')
         self.i = JunctionPoint(JunctionCoordinates.I, 'I')
         self.l = JunctionPoint(JunctionCoordinates.L, 'L')
+        self.list = [self.a, self.b, self.c, self.d, self.e, self.f, self.g, self.h, self.i, self.l]
         self.initialize_graph()  # aggiunge ai singoli incroci informazioni sugli incroci limitrofi 
+
+    def get_junction_by_point(self, x, y): 
+        result = None
+        for junction in self.list: 
+            if junction.is_in_junction(x, y):
+                result = junction.get_name()
+        return result
+
+    def get_junction_by_name(self, name): 
+        j = None 
+        if name == 'A':
+            j = self.a
+        elif name == 'B':
+            j = self.b
+        elif name == 'C':
+            j = self.c
+        elif name == 'D':
+            j = self.d
+        elif name == 'E':
+            j = self.e
+        elif name == 'F':
+            j = self.f
+        elif name == 'G':
+            j = self.g
+        elif name == 'H':
+            j = self.h
+        elif name == 'I':
+            j = self.i
+        elif name == 'L':
+            j = self.l
+        else: 
+            raise Exception('Questo incrocio non esiste, scegli fra A, B, C, D, E, F, G, H, I e L (in maiuscolo)')
+        return j
 
         
     def initialize_graph(self): 
@@ -208,6 +243,17 @@ class Junctions():
         return waypoint
         
      
+
+
+if __name__ == '__main__':
+    x = float(sys.argv[1])
+    y = float(sys.argv[2])
+
+    j = Junctions()
+    res = j.get_junction_by_point(x, y)
+    print(res)
+
+
 
 
     

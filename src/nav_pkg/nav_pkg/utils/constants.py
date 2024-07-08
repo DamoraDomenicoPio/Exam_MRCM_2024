@@ -24,3 +24,7 @@ class JunctionCoordinates(Enum):
     H = [36.70, -10]
     I = [58, -2]
     L = [58, -11]
+
+class Offsets(Enum):
+    x_offset = 10
+    y_offset = 5
