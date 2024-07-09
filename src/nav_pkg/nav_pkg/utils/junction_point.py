@@ -1,5 +1,5 @@
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
-from constants import Offsets
+from nav_pkg.utils.constants import Offsets
 
 class JunctionPoint(): 
 
@@ -55,6 +55,20 @@ class JunctionPoint():
     
         
     # Getter e setter
+    def get_adjacent_junction(self, direction): 
+        assert isinstance(direction, TurtleBot4Directions), 'La direzione deve essere un\'istanza della classe TurtleBot4Directions'
+        junction = None
+        if direction == TurtleBot4Directions.NORTH: 
+            junction =  self.get_nord()
+        elif direction == TurtleBot4Directions.SOUTH: 
+            junction = self.get_sud()
+        elif direction == TurtleBot4Directions.WEST: 
+            junction = self.get_ovest()
+        elif direction == TurtleBot4Directions.EAST: 
+            junction = self.get_est()
+        else: 
+            raise Exception(f'La direzione {direction} direzione non esiste') 
+        return junction
     
     def get_x(self): 
         return self._x

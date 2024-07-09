@@ -1,10 +1,5 @@
 from enum import Enum
 
-class Directions(Enum): 
-    NORD = 0
-    SUD = 180
-    EST = 270
-    OVEST = 90
 
 class Signs(Enum): 
     STOP = 'STOP'

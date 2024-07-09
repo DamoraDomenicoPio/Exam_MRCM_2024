@@ -3,6 +3,7 @@ import sys
 from my_msgs.srv import GetNextWp
 import rclpy
 from rclpy.node import Node
+from nav_pkg.utils.junctions import Junctions
 
 
 class DummyClient(Node):
@@ -34,6 +35,9 @@ def main():
         'Result for get next wp: point_name %s direction %s sign %s \n= x: %s y: %s direction: %s' %
         (str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), response.next_x, response.next_y, response.next_direction))
 
+    j = Junctions()
+    name = j.get_junction_by_point(response.next_x, response.next_y)
+    print(f'\nNext junction = {name}\n')
     minimal_client.destroy_node()
     rclpy.shutdown()
 
