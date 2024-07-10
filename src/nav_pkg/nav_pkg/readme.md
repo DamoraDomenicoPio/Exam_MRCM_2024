@@ -62,22 +62,37 @@ If you want run the program on the simulator, launch this:
 ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py nav2:=true slam:=false localization:=true rviz:=true
 ```
 
+### Service
+Run this command in another terminal.
+```sh
+cd ~/Scrivania/Exam_MRCM_2024
+source install/setup.bash
+ros2 run nav_pkg next_waypoint
+```
+
 ## Run your nodes
 ### Navigation node
 Run this command in another terminal.
 ```sh
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
-ros2 run nav_pkg navigation
+ros2 run nav_pkg navigation --point_name C --direction 270
 ```
 
-### QrCode reader
+### QrCode manager
 Run this command in another terminal.
 ```sh
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
-ros2 run nav_pkg qr_code_reader
+ros2 run nav_pkg qr_code_manager
 ```
+
+### QrCode recovery
+Run this command in another terminal.
+```sh
+cd ~/Scrivania/Exam_MRCM_2024
+source install/setup.bash
+ros2 run nav_pkg recovery_node
 
 ## Try your nodes
 

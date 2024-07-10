@@ -25,6 +25,8 @@ setup(
             "next_waypoint = nav_pkg.next_waypoint:main",
             "dummy_client = nav_pkg.dummy_client:main",
             "qr_code_manager = nav_pkg.qr_code_manager:main",
+            "init_node = nav_pkg.init_node:main",
+            "recovery_node = nav_pkg.qr_recovery:main",
         ],
     },
 )
