@@ -1,4 +1,4 @@
-from nav_pkg.utils.constants import Directions, Signs, JunctionCoordinates
+from nav_pkg.utils.constants import Signs, JunctionCoordinates
 from nav_pkg.utils.junction_point import JunctionPoint
 from nav_pkg.utils.junctions import Junctions
 from nav_pkg.utils.waypoint import Waypoint

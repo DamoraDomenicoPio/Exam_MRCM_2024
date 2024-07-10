@@ -1,7 +1,8 @@
-from nav_pkg.utils.constants import Directions, Signs, JunctionCoordinates
+from nav_pkg.utils.constants import Signs, JunctionCoordinates
 from nav_pkg.utils.waypoint import Waypoint
 from nav_pkg.utils.junction_point import JunctionPoint
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
+from nav_pkg.utils.constants import OffsetDetection, OffsetsRecovery, OffsetsEndpoint
 import sys
 
 class Junctions(): 
@@ -20,40 +21,6 @@ class Junctions():
         self.l = JunctionPoint(JunctionCoordinates.L, 'L')
         self.list = [self.a, self.b, self.c, self.d, self.e, self.f, self.g, self.h, self.i, self.l]
         self.initialize_graph()  # aggiunge ai singoli incroci informazioni sugli incroci limitrofi 
-
-    def get_junction_by_point(self, x, y): 
-        result = None
-        for junction in self.list: 
-            if junction.is_in_junction(x, y):
-                result = junction.get_name()
-        return result
-
-    def get_junction_by_name(self, name): 
-        j = None 
-        if name == 'A':
-            j = self.a
-        elif name == 'B':
-            j = self.b
-        elif name == 'C':
-            j = self.c
-        elif name == 'D':
-            j = self.d
-        elif name == 'E':
-            j = self.e
-        elif name == 'F':
-            j = self.f
-        elif name == 'G':
-            j = self.g
-        elif name == 'H':
-            j = self.h
-        elif name == 'I':
-            j = self.i
-        elif name == 'L':
-            j = self.l
-        else: 
-            raise Exception('Questo incrocio non esiste, scegli fra A, B, C, D, E, F, G, H, I e L (in maiuscolo)')
-        return j
-
         
     def initialize_graph(self): 
         '''Per ogni incocio, specifica quale incrocio è a nord, quale è a sud, quale è a est e quale è a nord'''
@@ -124,76 +91,41 @@ class Junctions():
         self.l.set_sud(self.h)
         self.l.set_ovest(self.i)
 
+    # ------------------------------------------------------------------------------------
 
-    def _get_next_direction(self, current_direction, sign):
-        print('\nCurrent direction: ')
-        next_direction = ''
-        # Se è orientato verso nord
-        if current_direction == Directions.NORD.value: 
-            print('nord')
-            if sign == Signs.LEFT.value: 
-                next_direction = Directions.OVEST.value
-            elif sign == Signs.RIGHT.value: 
-                next_direction = Directions.EST.value
-            elif sign == Signs.STRAIGHTON.value: 
-                next_direction = Directions.NORD.value
-            elif sign == Signs.GOBACK.value: 
-                next_direction = Directions.SUD.value
-
-
-        # Se è orientato verso sud 
-        elif current_direction == Directions.SUD.value: 
-            print('sud')
-            if sign == Signs.LEFT.value: 
-                next_direction = Directions.EST.value
-            elif sign == Signs.RIGHT.value: 
-                next_direction = Directions.OVEST.value
-            elif sign == Signs.STRAIGHTON.value: 
-                next_direction = Directions.SUD.value
-            elif sign == Signs.GOBACK.value: 
-                next_direction = Directions.NORD.value
-
-
-        # Se è orientato verso est 
-        elif current_direction == Directions.EST.value: 
-            print('est')
-            if sign == Signs.LEFT.value: 
-                next_direction = Directions.NORD.value
-            elif sign == Signs.RIGHT.value: 
-                next_direction = Directions.SUD.value
-            elif sign == Signs.STRAIGHTON.value: 
-                next_direction = Directions.EST.value
-            elif sign == Signs.GOBACK.value: 
-                next_direction = Directions.OVEST.value
-
-
-        # Se è orientato verso ovest
-        elif current_direction == Directions.OVEST.value: 
-            print('ovest')
-            if sign == Signs.LEFT.value: 
-                next_direction = Directions.SUD.value
-            elif sign == Signs.RIGHT.value: 
-                next_direction = Directions.NORD.value
-            elif sign == Signs.STRAIGHTON.value: 
-                next_direction = Directions.OVEST.value
-            elif sign == Signs.GOBACK.value: 
-                next_direction = Directions.EST.value
-
-        return next_direction
+    def get_junction_by_point(self, x, y): 
+        result = None
+        for junction in self.list: 
+            if junction.is_in_bbox(x, y):
+                result = junction.get_name()
+        return result
     
+    def get_junction_by_name(self, name): 
+        res = None
+        for j in self.list:
+            if name == j.get_name(): 
+                res = j
+        if res is None:
+            raise Exception('Questo incrocio non esiste, scegli fra A, B, C, D, E, F, G, H, I e L (in maiuscolo)')
+        return res
 
-    def _get_point_from_name(self, name):
-        if not (name=='A' or name=='B'or name=='C'or name=='D' or name=='E' or name=='F' or name=='G' or name=='H' or name=='I' or name=='L'):
-            raise Exception('Il nome di un punto può essere solo A, B, C, D, E, F, G, H, I oppure L')
-        
-        points = [self.a, self.b, self.c, self.d, self.e, self.f, self.g, self.h, self.i, self.l]
-        for point in points: 
-            if name == point.get_name(): 
-                return point
+    def _get_next_direction(self, current_direction, sign): 
+        next_direction = None
+        if sign == Signs.LEFT.value: 
+            next_direction = (current_direction + 90)%360
+        elif sign == Signs.RIGHT.value:
+            next_direction = (current_direction - 90)%360
+        elif sign == Signs.GOBACK.value: 
+            next_direction = (current_direction - 180)%360
+        elif sign == Signs.STRAIGHTON.value:
+            next_direction = current_direction
+        else: 
+            raise Exception('Questa direzione no nesiste, scegli fra 0, 90, 180 e 270')
+        result = self.convert_directions(next_direction)
+        return result
             
 
     def convert_directions(self, direction):
-        # TurtleBot4Directions
         new_dir = None
         if direction == 0:
             new_dir = TurtleBot4Directions.NORTH
@@ -206,42 +138,27 @@ class Junctions():
         return new_dir
 
 
-    
+
     def get_next_junciton_waypoint(self, point_name, current_direction, sign):
         '''Restituisce il prossimo waypoint in cui andare in base al segnale ricevuto 
         e alla posa (coordinate + direzione) corrente'''
-        current_point = self._get_point_from_name(point_name)
+        current_point = self.get_junction_by_name(point_name)
         next_direction = self._get_next_direction(current_direction, sign)
+        assert isinstance(next_direction, TurtleBot4Directions), 'next_directions deve essere istanza della classe TurtleBot4Directions'
 
+        next_point = None
+        next_point = current_point.get_adjacent_junction(next_direction)
 
-        next_point = '' 
-        if next_direction == Directions.NORD.value: 
-            print('nord')
-            next_direction = Directions.NORD
-            next_point = current_point.get_nord()
-        elif next_direction == Directions.SUD.value: 
-            print('sud')
-            next_direction = Directions.SUD
-            next_point = current_point.get_sud()
-        elif next_direction == Directions.EST.value: 
-            print('est')
-            next_direction = Directions.EST
-            next_point = current_point.get_est()
-        elif next_direction == Directions.OVEST.value: 
-            print('fatto ovest')
-            next_direction = Directions.OVEST
-            next_point = current_point.get_ovest()
-
-        if next_point == '': 
+        if next_point is None: 
             print('\nNESSUNA DIREZIONE\n')
 
         if not next_point:  # Se next_point è none
             raise Exception('Stai andando contro un muro')
 
-        waypoint = Waypoint(next_point.get_x(), next_point.get_y(),  self.convert_directions(next_direction.value))
+        # waypoint = Waypoint(next_point.get_x(), next_point.get_y(),  self.convert_directions(next_direction.value))
+        waypoint = Waypoint(next_point.get_bbox_x(next_direction, OffsetsEndpoint), next_point.get_bbox_y(next_direction, OffsetsEndpoint),  self.convert_directions(next_direction.value))
 
         return waypoint
-        
      
 
 

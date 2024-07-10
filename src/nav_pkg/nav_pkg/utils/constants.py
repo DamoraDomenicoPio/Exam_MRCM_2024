@@ -1,10 +1,7 @@
 from enum import Enum
+from abc import ABC, abstractmethod
 
-class Directions(Enum): 
-    NORD = 0
-    SUD = 180
-    EST = 270
-    OVEST = 90
+
 
 class Signs(Enum): 
     STOP = 'STOP'
@@ -25,6 +22,18 @@ class JunctionCoordinates(Enum):
     I = [58, -2]
     L = [58, -11]
 
-class Offsets(Enum):
+# class Offsets(Enum):
+#     x_offset = 10
+#     y_offset = 5
+
+class OffsetDetection(Enum):
     x_offset = 10
     y_offset = 5
+
+class OffsetsRecovery(Enum):
+    x_offset = 5
+    y_offset = 3
+
+class OffsetsEndpoint(Enum):
+    x_offset = 2
+    y_offset = 1

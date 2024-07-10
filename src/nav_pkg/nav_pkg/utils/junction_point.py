@@ -1,5 +1,5 @@
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
-from constants import Offsets
+from nav_pkg.utils.constants import OffsetDetection, OffsetsRecovery, OffsetsEndpoint
 
 class JunctionPoint(): 
 
@@ -16,45 +16,70 @@ class JunctionPoint():
         self._sud = None
         self._ovest = None
 
-    def is_in_junction(self, x, y): 
+    def is_in_bbox(self, x, y, offset_type=None): 
+        if offset_type is None: 
+            offset_type = OffsetDetection
+        assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
         result = True
-        if not x < self.get_bbox_x(TurtleBot4Directions.SOUTH): 
+        if not x < self.get_bbox_x(TurtleBot4Directions.SOUTH, offset_type): 
             result = False
-        if not x > self.get_bbox_x(TurtleBot4Directions.NORTH): 
+        if not x > self.get_bbox_x(TurtleBot4Directions.NORTH, offset_type): 
             result = False
-        if not y > self.get_bbox_y(TurtleBot4Directions.EAST): 
+        if not y > self.get_bbox_y(TurtleBot4Directions.EAST, offset_type): 
             result = False
-        if not y < self.get_bbox_y(TurtleBot4Directions.WEST): 
+        if not y < self.get_bbox_y(TurtleBot4Directions.WEST, offset_type): 
             result = False
         return result
 
 
-    def _get_bbox_point(self, direction):
+    def _get_bbox_point(self, direction, offset_type=None):
+        if offset_type is None: 
+            offset_type = OffsetDetection
+        assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
         assert isinstance(direction, TurtleBot4Directions), "La direzione deve essere un'istanza della classe TurtleBot4Directions"
         if direction == TurtleBot4Directions.NORTH:
             y = self.get_y()
-            x = self.get_x() - Offsets.x_offset.value
+            x = self.get_x() - offset_type.x_offset.value
         elif direction == TurtleBot4Directions.SOUTH:
             y = self.get_y()
-            x = self.get_x() + Offsets.x_offset.value
+            x = self.get_x() + offset_type.x_offset.value
         elif direction == TurtleBot4Directions.EAST: 
-            y = self.get_y() - Offsets.y_offset.value
+            y = self.get_y() - offset_type.y_offset.value
             x = self.get_x() 
         elif direction == TurtleBot4Directions.WEST: 
-            y = self.get_y() + Offsets.y_offset.value
+            y = self.get_y() + offset_type.y_offset.value
             x = self.get_x() 
+        
         return x, y
     
-    def get_bbox_x(self, direction): 
-        x, _ = self._get_bbox_point(direction)
+    def get_bbox_x(self, direction, offset_type=None): 
+        if offset_type is None: 
+            offset_type = OffsetDetection
+        x, _ = self._get_bbox_point(direction, offset_type)
         return x
     
-    def get_bbox_y(self, direction): 
-        _, y = self._get_bbox_point(direction)
+    def get_bbox_y(self, direction, offset_type=None):
+        if offset_type is None: 
+            offset_type = OffsetDetection
+        _, y = self._get_bbox_point(direction, offset_type)
         return y
     
         
     # Getter e setter
+    def get_adjacent_junction(self, direction): 
+        assert isinstance(direction, TurtleBot4Directions), 'La direzione deve essere un\'istanza della classe TurtleBot4Directions'
+        junction = None
+        if direction == TurtleBot4Directions.NORTH: 
+            junction =  self.get_nord()
+        elif direction == TurtleBot4Directions.SOUTH: 
+            junction = self.get_sud()
+        elif direction == TurtleBot4Directions.WEST: 
+            junction = self.get_ovest()
+        elif direction == TurtleBot4Directions.EAST: 
+            junction = self.get_est()
+        else: 
+            raise Exception(f'La direzione {direction} direzione non esiste') 
+        return junction
     
     def get_x(self): 
         return self._x
