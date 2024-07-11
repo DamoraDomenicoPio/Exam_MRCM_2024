@@ -47,6 +47,7 @@ class Checkpoint(Node):
     def listener_callback(self, msg):
         self.current_pose.set_pose_from_msg(msg)
         self.check_for_new_junction()
+        self.check_for_exit_from_junction()
 
         
 
