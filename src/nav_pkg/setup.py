@@ -26,7 +26,10 @@ setup(
             "dummy_client = nav_pkg.dummy_client:main",
             "qr_code_manager = nav_pkg.qr_code_manager:main",
             "recovery_node = nav_pkg.qr_recovery:main",
-            "starter = nav_pkg.starter:main"
+            "starter = nav_pkg.starter:main", 
+            "amcl_pose_dummy_publisher = nav_pkg.amcl_pose_dummy_publisher:main",
+            "minimal_publisher = nav_pkg.minimal_publisher:main",
+            "chackpoint = nav_pkg.checkpoint:main"
         ],
     },
 )

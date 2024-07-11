@@ -1,5 +1,5 @@
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
-from nav_pkg.utils.constants import OffsetDetection, OffsetsRecovery, OffsetsEndpoint
+from nav_pkg.utils.constants import OffsetDetection, OffsetsRecovery, OffsetsEndpoint, JunctionCoordinates
 import math
 
 class JunctionPoint(): 
@@ -16,6 +16,17 @@ class JunctionPoint():
         self._est = None
         self._sud = None
         self._ovest = None
+
+    def get_direction_by_destination(self, destination_junction_name): 
+        result = None
+        for dir in [TurtleBot4Directions.NORTH,TurtleBot4Directions.SOUTH, TurtleBot4Directions.EAST, TurtleBot4Directions.WEST]:
+            adj_junction = self.get_adjacent_junction(dir)
+            if adj_junction is not None and adj_junction.get_name() == destination_junction_name:
+                result = dir
+        if result is None: 
+            raise Exception('L\'incrocio non è adiacente, non è possibile stabilire la direzione di provenienza')
+        return result
+        
 
     def is_in_bbox(self, x, y, offset_type=None): 
         if offset_type is None: 
@@ -78,12 +89,11 @@ class JunctionPoint():
         return y
     
         
-    # Getter e setter
-    def get_adjacent_junction(self, direction:TurtleBot4Directions): 
+    def get_adjacent_junction(self, direction:TurtleBot4Directions) -> 'JunctionPoint': 
         assert isinstance(direction, TurtleBot4Directions), 'La direzione deve essere un\'istanza della classe TurtleBot4Directions'
         junction = None
         if direction == TurtleBot4Directions.NORTH: 
-            junction =  self.get_nord()
+            junction = self.get_nord()
         elif direction == TurtleBot4Directions.SOUTH: 
             junction = self.get_sud()
         elif direction == TurtleBot4Directions.WEST: 
@@ -92,7 +102,11 @@ class JunctionPoint():
             junction = self.get_est()
         else: 
             raise Exception(f'La direzione {direction} direzione non esiste') 
+        # if junction is None: 
+        #     raise Exception(f'Il punto {self.get_name()} non ha un incrocio a {direction.value}')
         return junction
+    
+    # Getter e setter
     
     def get_x(self): 
         return self._x
@@ -128,6 +142,33 @@ class JunctionPoint():
     def set_est(self, est): 
         self._est = est
 
+    def convert_directions(self, direction):
+        assert direction in [0, 90, 180, 270], f'Questa direzione {direction} non esiste, scegli fra 0, 90, 180 e 270'
+        new_dir = None
+        if direction == 0:
+            new_dir = TurtleBot4Directions.NORTH
+        if direction == 90: 
+            new_dir = TurtleBot4Directions.WEST
+        if direction == 180: 
+            new_dir = TurtleBot4Directions.SOUTH
+        if direction == 270: 
+            new_dir = TurtleBot4Directions.EAST
+        return new_dir
+
 
         
-    
+if __name__ == '__main__':
+    point = JunctionPoint(JunctionCoordinates.C, 'C')
+
+    point.set_nord(JunctionPoint(JunctionCoordinates.E, 'E'))
+    point.set_est(JunctionPoint(JunctionCoordinates.D, 'D'))
+    point.set_sud(JunctionPoint(JunctionCoordinates.A, 'A'))
+    point.set_ovest(None)
+    while True: 
+        # direction = int(input('Direction = '))
+        # direction = point.convert_directions(direction)
+        # new_point = point.get_adjacent_junction(direction)
+        # print(f'Adjacent point = {new_point.get_name()}')
+        destination = str(input('Destination junction = '))
+        direction = point.get_direction_by_destination(destination)
+        print(f'The direction is {str(direction)}')
