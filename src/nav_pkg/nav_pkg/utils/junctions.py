@@ -118,7 +118,7 @@ class Junctions():
         elif sign == Signs.GOBACK.value: 
             next_direction = (current_direction - 180)%360
         elif sign == Signs.STRAIGHTON.value:
-            next_direction = current_direction
+            next_direction = current_direction%360
         else: 
             raise Exception('Questa direzione no nesiste, scegli fra 0, 90, 180 e 270')
         result = self.convert_directions(next_direction)
