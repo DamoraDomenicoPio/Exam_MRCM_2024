@@ -49,6 +49,7 @@ class Navigation(Node):
         # Private attributes
         init_junction = self._junctions.get_junction_by_name(point_name)
         self._start_wp = Waypoint(init_junction.get_x(), init_junction.get_y(), self._int_to_direction(direction))
+        # self._start_wp = Waypoint(0.0, 0.0, TurtleBot4Directions.NORTH)
         self._end_wp = Waypoint(self._start_wp.get_x(), self._start_wp.get_y(), self._start_wp.get_direction())
         self._is_set_start_wp = True
         self._is_set_end_wp = False
@@ -91,15 +92,15 @@ class Navigation(Node):
         end_wp_msg.x = response.next_x
         end_wp_msg.y = response.next_y
 
-        # TODO: DA PROVARE
-        if response.next_direction == 0:
-            end_wp_msg.x -= 3.0
-        elif response.next_direction == 90:
-            end_wp_msg.y -= 3.0
-        elif response.next_direction == 180:
-            end_wp_msg.x += 3.0
-        elif response.next_direction == 270:
-            end_wp_msg.y += 3.0
+        # # TODO: DA PROVARE
+        # if response.next_direction == 0:
+        #     end_wp_msg.x -= 3.0
+        # elif response.next_direction == 90:
+        #     end_wp_msg.y -= 3.0
+        # elif response.next_direction == 180:
+        #     end_wp_msg.x += 3.0
+        # elif response.next_direction == 270:
+        #     end_wp_msg.y += 3.0
 
         end_wp_msg.direction = response.next_direction
         self.get_logger().info(f"Publishing end wp: {end_wp_msg}")

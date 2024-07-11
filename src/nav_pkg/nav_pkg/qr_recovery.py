@@ -73,7 +73,15 @@ class Qr_recovery(Node):
                 #caso 2
                 self.pattern_movement(x, y, yaw)
             
-
+    def _int_to_int_direction(self, num):
+        if (num >= 0 and num <= 45) or (num >= 315 and num <= 360):
+            return 0
+        elif num >= 225 and num <= 315:
+            return 270
+        elif num >= 135 and num <= 225:
+            return 180
+        elif num >= 45 and num <= 135:
+            return 90
 
     def qr_code_seen(self, x, y, yaw,alpha):
             # vado avanti di 5 cm
@@ -132,6 +140,26 @@ class Qr_recovery(Node):
 
 
     def pattern_movement(self, x, y, yaw):
+            yaw = self._int_to_int_direction(yaw%360)
+
+            print("Old x and y", x, y, yaw)
+
+            if (yaw >= 0 and yaw <= 45) or (yaw >= 315 and yaw <= 360):
+                print("A")
+                x += 0.5
+            elif yaw >= 135 and yaw <= 225:
+                print("B")
+                x -= 0.5
+            if yaw >= 45 and yaw <= 135:
+                print("C")
+                y += 0.5
+            elif yaw >= 225 and yaw <= 315:
+                print("D")
+                y -= 0.5
+
+            print("New x and y", x, y)
+
+
             while True:
                 print("Pattern movement")
                 end_wp_msg = WaypointMsg()
@@ -202,7 +230,7 @@ class Qr_recovery(Node):
                     print("Stop recovery")
                     self._stop_recovery = False
                     return
-                print("Position - vado avanti: x: ", x, "y: ", y, "yaw: ", yaw)
+                print("Position - vado avanti: x: ", new_x, "y: ", new_y, "yaw: ", yaw)
 
                 
 
@@ -219,6 +247,7 @@ class Qr_recovery(Node):
                 x = new_x
                 y = new_y
                 print("New position: x: ", x, "y: ", y, "yaw: ", yaw)
+
 
 
 def main():
