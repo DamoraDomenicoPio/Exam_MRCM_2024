@@ -93,10 +93,10 @@ class Junctions():
 
     # ------------------------------------------------------------------------------------
 
-    def get_junction_by_point(self, x, y): 
+    def get_junction_by_point(self, x, y, offset_type=None): 
         result = None
         for junction in self.list: 
-            if junction.is_in_bbox(x, y):
+            if junction.is_in_bbox(x, y, offset_type):
                 result = junction.get_name()
         return result
     
@@ -157,8 +157,8 @@ class Junctions():
         if not next_point:  # Se next_point è none
             raise Exception('Stai andando contro un muro')
 
-        # waypoint = Waypoint(next_point.get_x(), next_point.get_y(),  self.convert_directions(next_direction.value))
-        waypoint = Waypoint(next_point.get_bbox_x(next_direction, OffsetsEndpoint), next_point.get_bbox_y(next_direction, OffsetsEndpoint),  self.convert_directions(next_direction.value))
+        waypoint = Waypoint(next_point.get_x(), next_point.get_y(),  self.convert_directions(next_direction.value))
+        # waypoint = Waypoint(next_point.get_bbox_x(next_direction, OffsetsEndpoint), next_point.get_bbox_y(next_direction, OffsetsEndpoint),  self.convert_directions(next_direction.value))
 
         return waypoint
      

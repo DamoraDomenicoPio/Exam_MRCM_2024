@@ -15,19 +15,18 @@ class NextWaypointService(Node):
         self.server = self.create_service(GetNextWp, 'next_waypoint_service', self.next_waypoint_callback)
         self.junctions = Junctions()  # Oggetto che gestisce gli incroci
         self.j = Junctions()
+        print('Service ready')
 
     def next_waypoint_callback(self, request, response):
         waypoint = self.junctions.get_next_junciton_waypoint(request.point_name, request.direction, request.sign)
         if not isinstance(waypoint, Waypoint): 
             raise TypeError('La funzione get_next_junction_waypoint deve restituire un waypoint')
-        
-        x = waypoint.get_x
 
         response.next_x = float(waypoint.get_x())
         response.next_y = float(waypoint.get_y())
         response.next_direction = int(waypoint.get_direction().value)
         name = self.j.get_junction_by_point(response.next_x, response.next_y)
-        print(f'Recieved point = {request.point_name}, direction = {request.direction}, sign = {request.sign}')
+        print(f'\nRecieved point = {request.point_name}, direction = {request.direction}, sign = {request.sign}')
         print(f'Sent x = {response.next_x}, y = {response.next_y}, dir = {response.next_direction}. Next junction = {name}')
         return response
 

@@ -1,5 +1,6 @@
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
 from nav_pkg.utils.constants import OffsetDetection, OffsetsRecovery, OffsetsEndpoint
+import math
 
 class JunctionPoint(): 
 
@@ -32,7 +33,7 @@ class JunctionPoint():
         return result
 
 
-    def _get_bbox_point(self, direction, offset_type=None):
+    def _get_standard_bbox_point(self, direction, offset_type=None): 
         if offset_type is None: 
             offset_type = OffsetDetection
         assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
@@ -52,21 +53,33 @@ class JunctionPoint():
         
         return x, y
     
+    def _get_complete_bbox_point(self, direction:TurtleBot4Directions): 
+        x = round(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2, 2)
+        y = round(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2, 2)
+        return x, y
+
+
+    def _get_bbox_point(self, direction, offset_type=None):
+        x = None 
+        y = None
+        if offset_type:
+            x, y = self._get_standard_bbox_point(direction, offset_type)
+        else: 
+            x, y = self._get_complete_bbox_point(direction)
+        return x, y
+        
+    
     def get_bbox_x(self, direction, offset_type=None): 
-        if offset_type is None: 
-            offset_type = OffsetDetection
         x, _ = self._get_bbox_point(direction, offset_type)
         return x
     
     def get_bbox_y(self, direction, offset_type=None):
-        if offset_type is None: 
-            offset_type = OffsetDetection
         _, y = self._get_bbox_point(direction, offset_type)
         return y
     
         
     # Getter e setter
-    def get_adjacent_junction(self, direction): 
+    def get_adjacent_junction(self, direction:TurtleBot4Directions): 
         assert isinstance(direction, TurtleBot4Directions), 'La direzione deve essere un\'istanza della classe TurtleBot4Directions'
         junction = None
         if direction == TurtleBot4Directions.NORTH: 
