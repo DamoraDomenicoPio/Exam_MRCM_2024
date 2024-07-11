@@ -29,7 +29,7 @@ setup(
             "starter = nav_pkg.starter:main", 
             "amcl_pose_dummy_publisher = nav_pkg.amcl_pose_dummy_publisher:main",
             "minimal_publisher = nav_pkg.minimal_publisher:main",
-            "chackpoint = nav_pkg.checkpoint:main"
+            "checkpoint = nav_pkg.checkpoint:main"
         ],
     },
 )
