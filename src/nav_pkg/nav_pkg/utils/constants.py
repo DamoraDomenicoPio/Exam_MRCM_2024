@@ -35,5 +35,5 @@ class OffsetsRecovery(Enum):
     y_offset = 3
 
 class OffsetsEndpoint(Enum):
-    x_offset = 2
-    y_offset = 1
+    x_offset = 0
+    y_offset = 0

@@ -110,6 +110,7 @@ class Junctions():
         return res
 
     def _get_next_direction(self, current_direction, sign): 
+        assert current_direction in [0, 90, 180, 270], f'Questa direzione {current_direction} non esiste, scegli fra 0, 90, 180 e 270'
         next_direction = None
         if sign == Signs.LEFT.value: 
             next_direction = (current_direction + 90)%360
@@ -118,14 +119,15 @@ class Junctions():
         elif sign == Signs.GOBACK.value: 
             next_direction = (current_direction - 180)%360
         elif sign == Signs.STRAIGHTON.value:
-            next_direction = current_direction
+            next_direction = current_direction%360
         else: 
-            raise Exception('Questa direzione no nesiste, scegli fra 0, 90, 180 e 270')
+            raise Exception(f'Questo segnale ({sign} non esiste)')
         result = self.convert_directions(next_direction)
         return result
             
 
     def convert_directions(self, direction):
+        assert direction in [0, 90, 180, 270], f'Questa direzione {direction} non esiste, scegli fra 0, 90, 180 e 270'
         new_dir = None
         if direction == 0:
             new_dir = TurtleBot4Directions.NORTH
