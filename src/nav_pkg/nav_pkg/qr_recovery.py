@@ -52,6 +52,7 @@ class Qr_recovery(Node):
         self._turtlebot_is_stopped = msg.data
 
     def stop_recovery(self, msg):
+        print("STOP RECOVERY:", msg.data)
         self._stop_recovery = msg.data
 
     def listener_callback(self, msg):
@@ -77,7 +78,7 @@ class Qr_recovery(Node):
     def qr_code_seen(self, x, y, yaw,alpha):
             # vado avanti di 5 cm
             print("QR code seen")
-            new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 2.5)
+            new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 1.0)
             end_wp_msg = WaypointMsg()
             end_wp_msg.x = new_x
             end_wp_msg.y = new_y
@@ -86,8 +87,49 @@ class Qr_recovery(Node):
                 print("Stop recovery")
                 self._stop_recovery = False
                 return
+            
+            
+
             self.pub_end_wp.publish(end_wp_msg)
+
+            self._turtlebot_is_stopped = False
+            
             print("New directions: ", new_x, new_y, end_wp_msg.direction)
+
+            while not self._turtlebot_is_stopped:
+                pass
+
+            x = new_x
+            y = new_y
+            direction = (yaw+alpha)%360
+
+
+            while True:
+                new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 1.0)
+                end_wp_msg = WaypointMsg()
+                end_wp_msg.x = new_x
+                end_wp_msg.y = new_y
+                end_wp_msg.direction = direction
+                if self._stop_recovery:
+                    print("Stop recovery")
+                    self._stop_recovery = False
+                    return
+                
+                
+
+                self.pub_end_wp.publish(end_wp_msg)
+
+                self._turtlebot_is_stopped = False
+                
+                print("New directions: ", new_x, new_y, end_wp_msg.direction)
+
+                while not self._turtlebot_is_stopped:
+                    pass
+
+                x = new_x
+                y = new_y
+
+
 
     def pattern_movement(self, x, y, yaw):
             while True:
@@ -103,6 +145,9 @@ class Qr_recovery(Node):
                     self._stop_recovery = False
                     return
                 print("Position - giro a sinistra: x: ", x, "y: ", y, "yaw: ", (yaw + 45)%360)
+
+                
+
                 self.pub_end_wp.publish(end_wp_msg)
 
                 self._turtlebot_is_stopped = False
@@ -120,6 +165,9 @@ class Qr_recovery(Node):
                     self._stop_recovery = False
                     return
                 print("Position - giro a destra: x: ", x, "y: ", y, "yaw: ", (yaw - 45)%360)
+
+                
+
                 self.pub_end_wp.publish(end_wp_msg)
 
                 self._turtlebot_is_stopped = False
@@ -131,12 +179,14 @@ class Qr_recovery(Node):
                 print("Ho girato a sinistra")
                 # Torna dritto
                 end_wp_msg.direction = yaw%360
-                print("AAAAAAAAAAAAAAAAAAAAAAAAAa 1")
                 if self._stop_recovery:
                     print("Stop recovery")
                     self._stop_recovery = False
                     return
                 print("Position - torno centrale: x: ", x, "y: ", y, "yaw: ", yaw%360)
+                
+                
+                
                 self.pub_end_wp.publish(end_wp_msg)
 
                 self._turtlebot_is_stopped = False
@@ -153,9 +203,15 @@ class Qr_recovery(Node):
                     self._stop_recovery = False
                     return
                 print("Position - vado avanti: x: ", x, "y: ", y, "yaw: ", yaw)
+
+                
+
                 self.pub_end_wp.publish(end_wp_msg)
-                print("Vado dritto")
+
                 self._turtlebot_is_stopped = False
+
+                print("Vado dritto")
+                
 
                 while not self._turtlebot_is_stopped:
                     pass

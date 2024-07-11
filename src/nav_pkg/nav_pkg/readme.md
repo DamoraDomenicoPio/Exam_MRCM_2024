@@ -93,12 +93,12 @@ Run this command in another terminal.
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
 ros2 run nav_pkg recovery_node
-
+```
 ## Try your nodes
 
 Try navigation node changing startpoint in code e giving end point through this command on bash:
 ```sh
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
-ros2 topic pub -1 /end_wp my_msgs/msg/WaypointMsg "{x: -3.0, y: -10.0, direction: 0}"
+ros2 topic pub -1 /end_wp my_msgs/msg/WaypointMsg "{x: -3.0, y: -10.0, direction: 270}"
 ```

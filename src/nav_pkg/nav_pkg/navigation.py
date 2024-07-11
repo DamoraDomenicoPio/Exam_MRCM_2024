@@ -90,6 +90,17 @@ class Navigation(Node):
         end_wp_msg = WaypointMsg()
         end_wp_msg.x = response.next_x
         end_wp_msg.y = response.next_y
+
+        # TODO: DA PROVARE
+        if response.next_direction == 0:
+            end_wp_msg.x -= 3.0
+        elif response.next_direction == 90:
+            end_wp_msg.y -= 3.0
+        elif response.next_direction == 180:
+            end_wp_msg.x += 3.0
+        elif response.next_direction == 270:
+            end_wp_msg.y += 3.0
+
         end_wp_msg.direction = response.next_direction
         self.get_logger().info(f"Publishing end wp: {end_wp_msg}")
 

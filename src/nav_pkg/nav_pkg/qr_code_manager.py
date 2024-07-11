@@ -148,11 +148,13 @@ class QRCodeManager(Node):
         
         # Convert the angle from degrees to radians for the tan function
         qr_code_fov_rad = math.radians(qr_code_fov)
+
+        print("Nella funzione che calcola la distanca:", qr_code_fov, qr_code_fov_rad, math.tan(qr_code_fov_rad / 2), qr_code_actual_width_cm / (2 * math.tan(qr_code_fov_rad / 2)))
         
         # Calculate the distance using the formula
         distance = qr_code_actual_width_cm / (2 * math.tan(qr_code_fov_rad / 2))
 
-        distance = distance/100
+        distance = abs(distance/100)
         
         return distance
 
@@ -211,6 +213,8 @@ class QRCodeManager(Node):
         str: Junction in which the qr code is located
         '''
 
+        print("Calcolo x:", math.cos(math.radians(self._my_pose.get_yaw() + rotation_angle)), distance, self._my_pose.get_x())
+        print("Calcolo y:", math.sin(math.radians(self._my_pose.get_yaw() + rotation_angle)), distance, self._my_pose.get_y())
         print("Estimated qr position:")
         x_estimated = self._my_pose.get_x() + distance * math.cos(math.radians(self._my_pose.get_yaw() + rotation_angle))
         y_estimated = self._my_pose.get_y() + distance * math.sin(math.radians(self._my_pose.get_yaw() + rotation_angle))
