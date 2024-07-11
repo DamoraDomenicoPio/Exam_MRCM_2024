@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-
 from std_msgs.msg import String
 from nav_pkg.utils.constants import Signs
 
@@ -9,7 +8,9 @@ class MinimalPublisher(Node):
 
     def __init__(self):
         super().__init__('minimal_publisher')
-        self.publisher_ = self.create_publisher(String, 'road_sign', 1)
+        self.publisher_ = self.create_publisher(String, '/road_sign', 10)
+
+    def publish_straighton(self):
         msg = String()
         msg.data = Signs.STRAIGHTON.value
         self.publisher_.publish(msg)
@@ -20,8 +21,12 @@ def main(args=None):
     rclpy.init(args=args)
 
     minimal_publisher = MinimalPublisher()
-    minimal_publisher.destroy_node()
-    rclpy.shutdown()
+    print('Test object created')
+
+    while True: 
+        print('Press enter to send a STRAIGHTON...')
+        input()
+        minimal_publisher.publish_straighton()
 
 
 if __name__ == '__main__':
