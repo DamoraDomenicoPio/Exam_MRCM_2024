@@ -56,18 +56,21 @@ class Checkpoint(Node):
 
         # Instance variables 
         self.current_pose = MyPose()
-        self.curret_junction = sys.argv[1]
-        assert self.curret_junction in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L'], 'Questo incrocio non esiste. Scegli fra A B C D E F G H I o L'
+        self.curret_junction = 'C' # sys.argv[1]
+        # assert self.curret_junction in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L'], 'Questo incrocio non esiste. Scegli fra A B C D E F G H I o L'
         self.junctions = Junctions()
         self.in_junction = True
-        self.last_checkpoint = None
-        self.last_direction = None
+        self.last_checkpoint = [0,0]
+        self.last_direction = 0
+        self.not_initialized = True
+        self.kidnapped_published = False
+        self.print_checkpoint()
 
     # --------------------------------------------------------------------------------
 
     def old_yaw_to_direction(self, yaw): 
         direction = None
-        if (yaw>=0 and yaw<=-45) or (yaw>=0 and yaw<=45): 
+        if (yaw<=0 and yaw>=-45) or (yaw>=0 and yaw<=45): 
             direction = TurtleBot4Directions.NORTH
         elif yaw>=45 and yaw<=135: 
             direction = TurtleBot4Directions.WEST
@@ -93,6 +96,14 @@ class Checkpoint(Node):
         else: 
             raise Exception(f'La direzione {direction} (yaw = {yaw}) non esiste')
         return direction
+    
+    def initialize_checkpoint(self):
+        if self.not_initialized: 
+            self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+            self.last_checkpoint = [self.current_pose.get_x(), self.current_pose.get_y()]
+            self.not_initialized = False
+            print('Checkpoint initialized')
+            self.print_checkpoint()
 
     def check_for_new_junction(self):
         new_junction = self.junctions.get_junction_by_point(self.current_pose.get_x(), self.current_pose.get_y())
@@ -102,10 +113,11 @@ class Checkpoint(Node):
             direction = old_junction_object.get_direction_by_destination(new_junction)
             x, y = old_junction_object._get_bbox_point(direction)
             self.curret_junction = new_junction
-            print(f'\nI\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
+            print(f'\nMid corridor - Entering the {self.curret_junction} zone.') 
             self.last_checkpoint = [x, y]
             self.last_direction = direction
-            print(f'Yaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
+            # self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+            self.print_checkpoint()
 
 
 
@@ -118,12 +130,15 @@ class Checkpoint(Node):
                 junction_object = self.junctions.get_junction_by_name(self.curret_junction)
                 x = junction_object.get_x()
                 y = junction_object.get_y()
-                print(f'\nJust entered a corridor. New checkpoint: x = {x}, y = {y}')
+                print(f'\nJust entered a corridor and exited from the {self.curret_junction} junction')
                 self.last_checkpoint = [x, y]
                 self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
-                print(f'Yaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
+                self.print_checkpoint()
         else:
             self.in_junction = True
+
+    def print_checkpoint(self): 
+        print(f'New checkpoint: x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {self.junctions.convert_directions(self.last_direction).name}')
 
                 
 
@@ -131,27 +146,28 @@ class Checkpoint(Node):
 
     def publish_checkpoint(self):
         end_wp_msg = WaypointMsg()
-        end_wp_msg.x = self.last_checkpoint[0]
-        end_wp_msg.y = self.last_checkpoint[1]
+        end_wp_msg.x = float(self.last_checkpoint[0])
+        end_wp_msg.y = float(self.last_checkpoint[1])
         end_wp_msg.direction = self.last_direction
-        print(f'\nPublished x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {self.last_direction}')
-
-        # msg = String()
-        # msg.data = f'{self.last_checkpoint[0]},{self.last_checkpoint[1]},{self.last_direction.value}'
+        print('Published')
+        self.print_checkpoint()
         self.publisher_.publish(end_wp_msg)
-        # self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
     def listener_callback_amcl(self, msg):
         self.current_pose.set_pose_from_msg(msg)
+        self.initialize_checkpoint()
         self.check_for_new_junction()
         self.check_for_exit_from_junction()
 
     def listener_callback_kidnapped(self, msg): 
         if msg.is_kidnapped:
-            print(f'Kidnapped {str(msg.is_kidnapped)}')
-            self.publish_checkpoint()
-
+            if self.kidnapped_published: 
+                print(f'Kidnapped {str(msg.is_kidnapped)}')
+                self.publish_checkpoint()
+                self.kidnapped_published = True
+        else: 
+            self.kidnapped_published = False
 
         
 
