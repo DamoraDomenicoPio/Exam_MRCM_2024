@@ -24,7 +24,7 @@ class JunctionPoint():
             if adj_junction is not None and adj_junction.get_name() == destination_junction_name:
                 result = dir
         if result is None: 
-            raise Exception('L\'incrocio non è adiacente, non è possibile stabilire la direzione di provenienza')
+            raise Exception(f'L\'incrocio {destination_junction_name} non è adiacente a {self.get_name()}, non è possibile stabilire la direzione di provenienza')
         return result
         
 
@@ -65,8 +65,8 @@ class JunctionPoint():
         return x, y
     
     def _get_complete_bbox_point(self, direction:TurtleBot4Directions): 
-        x = math.ceil(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2, 2)
-        y = math.ceil(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2, 2)
+        x = math.ceil(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2)
+        y = math.ceil(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2)
         return x, y
 
 

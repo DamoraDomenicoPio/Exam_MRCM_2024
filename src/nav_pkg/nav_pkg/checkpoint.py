@@ -60,13 +60,13 @@ class Checkpoint(Node):
 
     def yaw_to_direction(self, yaw): 
         direction = None
-        if (yaw>=315 and yaw<=360) or (yaw>=0 and yaw<45): 
+        if (yaw>=315 and yaw<=360) or (yaw>=0 and yaw<=45): 
             direction = TurtleBot4Directions.NORTH
-        elif yaw>=45 and yaw<135: 
+        elif yaw>=45 and yaw<=135: 
             direction = TurtleBot4Directions.WEST
-        elif yaw>=225 and yaw<225: 
+        elif yaw>=225 and yaw<=225: 
             direction = TurtleBot4Directions.SOUTH
-        elif yaw>=225 and yaw<315: 
+        elif yaw>=225 and yaw<=315: 
             direction = TurtleBot4Directions.EAST
         if direction is None: 
             raise Exception(f'La direzione {direction} non esiste')
@@ -74,15 +74,15 @@ class Checkpoint(Node):
 
     def check_for_new_junction(self):
         new_junction = self.junctions.get_junction_by_point(self.current_pose.get_x(), self.current_pose.get_y())
-        self.get_logger().info(f'I heard: {str(self.current_pose)}.\tCurrent junction = {new_junction}')
+        # self.get_logger().info(f'I heard: {str(self.current_pose)}.\tCurrent junction = {new_junction}')
         if new_junction != self.curret_junction: 
             old_junction_object = self.junctions.get_junction_by_name(self.curret_junction)
             direction = old_junction_object.get_direction_by_destination(new_junction)
             x, y = old_junction_object._get_bbox_point(direction)
             self.curret_junction = new_junction
-            print(f'I\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}') 
+            print(f'I\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
             self.last_checkpoint = [x, y]
-            self.last_direction = direction
+            # self.last_direction = direction
 
 
 
@@ -95,9 +95,11 @@ class Checkpoint(Node):
                 junction_object = self.junctions.get_junction_by_name(self.curret_junction)
                 x = junction_object.get_x()
                 y = junction_object.get_y()
-                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}')
+                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}')
                 self.last_checkpoint = [x, y]
-                self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+                # self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+        else:
+            self.in_junction = True
 
                 
 
@@ -122,6 +124,7 @@ class Checkpoint(Node):
         self.check_for_exit_from_junction()
 
     def listener_callback_kidnapped(self, msg): 
+        print('Kidnapped')
         if msg.data:
             self.publish_checkpoint()
 

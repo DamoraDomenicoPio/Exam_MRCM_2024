@@ -46,5 +46,5 @@ class MyPose():
         def set_pose_from_msg(self, msg):
             current_pose = msg.pose.pose
             yaw = self.euler_from_quaternion(current_pose.orientation)
-            self._my_pose.set_pose(current_pose.position.x, current_pose.position.y, math.degrees(yaw))
+            self.set_pose(current_pose.position.x, current_pose.position.y, math.degrees(yaw))
              
