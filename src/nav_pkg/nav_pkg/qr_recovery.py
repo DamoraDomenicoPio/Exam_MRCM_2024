@@ -113,7 +113,9 @@ class Qr_recovery(Node):
             end_wp_msg = WaypointMsg()
             end_wp_msg.x = new_x
             end_wp_msg.y = new_y
-            end_wp_msg.direction = (yaw+alpha)%360
+
+            direction = self._int_to_int_direction((yaw+alpha)%360)
+            end_wp_msg.direction = direction
             if self._stop_recovery_case_1:
                 print("Stop recovery case 1")
                 

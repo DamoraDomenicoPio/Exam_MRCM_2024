@@ -48,8 +48,8 @@ class Navigation(Node):
         
         # Private attributes
         init_junction = self._junctions.get_junction_by_name(point_name)
-        # self._start_wp = Waypoint(init_junction.get_x(), init_junction.get_y(), self._int_to_direction(direction))
-        self._start_wp = Waypoint(0.0, 0.0, TurtleBot4Directions.NORTH)
+        self._start_wp = Waypoint(init_junction.get_x(), init_junction.get_y(), self._int_to_direction(direction))
+        # self._start_wp = Waypoint(0.0, 0.0, TurtleBot4Directions.NORTH)
         self._end_wp = Waypoint(self._start_wp.get_x(), self._start_wp.get_y(), self._start_wp.get_direction())
         self._is_set_start_wp = True
         self._is_set_end_wp = False
@@ -177,6 +177,7 @@ class Navigation(Node):
             # publish end_wp
 
     def start_wp_callback(self, msg):
+        print("Start wp", msg)
         if not self._is_set_start_wp and not self._is_main_running:
             x = msg.x
             y = msg.y
@@ -184,6 +185,7 @@ class Navigation(Node):
             direction = self._int_to_direction(msg.direction)
             initial_pose = self._navigator.getPoseStamped([x, y], direction)
             self._navigator.setInitialPose(initial_pose)
+            self._start_wp = Waypoint(x, y, direction)
             self._is_set_start_wp = True
             print("Setting start wp:", x, y, direction)
 
