@@ -11,6 +11,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from my_msgs.msg import WaypointMsg
 from turtlebot4_navigation.turtlebot4_navigator import TurtleBot4Directions
 import sys
+from irobot_create_msgs.msg import KidnapStatus
 
 
 class Checkpoint(Node):
@@ -35,17 +36,23 @@ class Checkpoint(Node):
         self.subscription  # prevent unused variable warning
 
         # Iscrizione a kidnapped
+        qos_profile_kidnapped = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10  # Puoi adattare il valore in base alle tue esigenze
+        )
         kidnapped_cb_group = ReentrantCallbackGroup()
         self.subscription = self.create_subscription(
-            Bool,
+            KidnapStatus,
             '/kidnap_status',
             self.listener_callback_kidnapped,
-            qos_profile,
+            qos_profile_kidnapped,
             callback_group=kidnapped_cb_group)
         self.subscription  # prevent unused variable warning
 
         # Creazione del publisher
-        self.publisher_ = self.create_publisher(WaypointMsg, '/end_wp', qos_profile)
+        self.publisher_ = self.create_publisher(WaypointMsg, '/start_wp', qos_profile)
 
         # Instance variables 
         self.current_pose = MyPose()
@@ -58,18 +65,33 @@ class Checkpoint(Node):
 
     # --------------------------------------------------------------------------------
 
-    def yaw_to_direction(self, yaw): 
+    def old_yaw_to_direction(self, yaw): 
         direction = None
         if (yaw>=0 and yaw<=-45) or (yaw>=0 and yaw<=45): 
             direction = TurtleBot4Directions.NORTH
         elif yaw>=45 and yaw<=135: 
             direction = TurtleBot4Directions.WEST
-        if (yaw>=135 and yaw<=-180) or (yaw>=-180 and yaw<=-135): 
+        if (yaw>=135 and yaw<=180) or (yaw>=-180 and yaw<=-135): 
             direction = TurtleBot4Directions.SOUTH
         elif yaw>=-180 and yaw<=-90: 
             direction = TurtleBot4Directions.EAST
         if direction is None: 
-            raise Exception(f'La direzione {direction} non esiste')
+            raise Exception(f'La direzione {direction} (yaw = {yaw}) non esiste')
+        return direction
+    
+    def yaw_to_direction(self, yaw):
+        yaw = yaw % 360
+        direction = None
+        if (yaw>=0 and yaw<=45) or (yaw>=315 and yaw<=360): 
+            direction = TurtleBot4Directions.NORTH
+        elif yaw>=45 and yaw<=135: 
+            direction = TurtleBot4Directions.WEST
+        elif yaw>=135 and yaw<=225: 
+            direction = TurtleBot4Directions.SOUTH
+        elif yaw>=225 and yaw<=315: 
+            direction = TurtleBot4Directions.EAST
+        else: 
+            raise Exception(f'La direzione {direction} (yaw = {yaw}) non esiste')
         return direction
 
     def check_for_new_junction(self):
@@ -116,7 +138,7 @@ class Checkpoint(Node):
 
         # msg = String()
         # msg.data = f'{self.last_checkpoint[0]},{self.last_checkpoint[1]},{self.last_direction.value}'
-        # self.publisher_.publish(msg)
+        self.publisher_.publish(end_wp_msg)
         # self.get_logger().info('Publishing: "%s"' % msg.data)
 
 
@@ -126,8 +148,8 @@ class Checkpoint(Node):
         self.check_for_exit_from_junction()
 
     def listener_callback_kidnapped(self, msg): 
-        print('Kidnapped')
-        if msg.data:
+        if msg.is_kidnapped:
+            print(f'Kidnapped {str(msg.is_kidnapped)}')
             self.publish_checkpoint()
 
 

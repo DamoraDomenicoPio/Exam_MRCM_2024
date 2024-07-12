@@ -159,10 +159,13 @@ class Navigation(Node):
             msg.data = True
             self.pub_turtlebot_is_stopped.publish(msg)
         else:
-            self._navigator.cancelTask()
-            point_name = self._junctions.get_junction_by_point(self._end_wp.get_x(), self._end_wp.get_y())
-            print("Point name", point_name)
-            self.send_request(point_name, self._next_direction, road_sign)
+            if road_sign != "STOP":
+                self._navigator.cancelTask()
+                point_name = self._junctions.get_junction_by_point(self._end_wp.get_x(), self._end_wp.get_y())
+                print("Point name", point_name)
+                self.send_request(point_name, self._next_direction, road_sign)
+            else:
+                print("I read STOP. Finished.")
 
             # msg = WaypointMsg()
             # msg.x = 0.0

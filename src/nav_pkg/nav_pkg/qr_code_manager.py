@@ -77,6 +77,8 @@ class QRCodeManager(Node):
         # This variable is used to avoid start counnting the None signal if we see it for the first time
         self._start_conter_None = False
 
+        self._stop_manager = False
+
 
     class MyPose():
         def __init__(self, x=0.0, y=0.0, yaw=0.0):
@@ -270,138 +272,150 @@ class QRCodeManager(Node):
         # print("Image size", cv_image.shape)
         read_signal_list = self._reader.detect_and_decode(image=cv_image)
 
-        # if data.data == "":
-        #     read_signal_list = []
-        # elif data.data == "None":
-        #     read_signal_list = [None]
-        # else:
-        #     read_signal_list = [data.data]
+        if not self._stop_manager:
 
-        read_signal = ""
-        qr_code_width = None
-        
-        if len(read_signal_list) > 0:
-            # If something is detected we enter in this block
+            # if data.data == "":
+            #     read_signal_list = []
+            # elif data.data == "None":
+            #     read_signal_list = [None]
+            # else:
+            #     read_signal_list = [data.data]
+
+            read_signal = ""
+            qr_code_width = None
             
-            
-            # We take the detected signal
-            if read_signal_list[0] == None:
-                read_signal = "None"
-            else:
-                read_signal = read_signal_list[0]
-                self._last_position_qr = ""
-
-            rotation_angle, distance, qr_code_width, _ = self.get_qr_informations(cv_image)
-            # rotation_angle, distance, qr_code_width = 72, 15, 30
-
-            # If the detected signal is not the same as the previous one we send it to the navigator
-            if not self.filter_image(distance, rotation_angle, read_signal):
+            if len(read_signal_list) > 0:
+                # If something is detected we enter in this block
                 
-                # If the detected signal is None we increment the counter
-                if read_signal == "None":
-                    self._last_position_qr = str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + str(int(rotation_angle))
-                    if self._is_recovery == False:
-                        # The first None detected si send to navigator
-                        print("Inviiato il None?", self._counter_None, self._i, not self._turtlebot_is_stopped)
-                        if self._counter_None == 5 or self._i > self._max_limit - 5:
-                            if not self._turtlebot_is_stopped:
-                                self._pub_msg(self.pub_navigation, read_signal)
-                                print("Inviiato il None")
-                        
-                        if self._i <= self._max_limit:
-                            if self._start_conter_None:
-                                self._i += 1
-                                print("i + 1", self._i)
-                        elif self._turtlebot_is_stopped: # TODO: Prima c'era semplicemente un else. Adesso è stata aggiunta questa condizione perchè bisogna far partire la recovery solo se è fermo
-                            # If the counter is greater than the limit we start the recovery
-                            # From the moment that we see the signal, we know the qrcode position
+                
+                # We take the detected signal
+                if read_signal_list[0] == None:
+                    read_signal = "None"
+                else:
+                    read_signal = read_signal_list[0]
+                    self._last_position_qr = ""
+                    if read_signal == "STOP":
+                        self._stop_manager = True
+
+                        return
+
+                rotation_angle, distance, qr_code_width, _ = self.get_qr_informations(cv_image)
+                # rotation_angle, distance, qr_code_width = 72, 15, 30
+
+                # If the detected signal is not the same as the previous one we send it to the navigator
+                if not self.filter_image(distance, rotation_angle, read_signal):
+                    
+                    # If the detected signal is None we increment the counter
+                    if read_signal == "None":
+                        self._last_position_qr = str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + str(int(rotation_angle))
+                        if self._is_recovery == False:
+                            # The first None detected si send to navigator
+                            print("Inviiato il None?", self._counter_None, self._i, not self._turtlebot_is_stopped)
+                            if self._counter_None == 5 or self._i > self._max_limit - 5:
+                                if not self._turtlebot_is_stopped:
+                                    self._pub_msg(self.pub_navigation, read_signal)
+                                    print("Inviiato il None")
                             
-                            str_msg = "Start_" + self._last_position_qr 
-                            self._pub_msg(self.pub_recovery, str_msg)
-                            print("Inizio recovery:", str_msg)
-                            self._i = 0
-                            self._is_recovery = True
-                    else:
-                        # If we are in recovery without seeing qr code and now we see the signal None, we restart the recovery,
-                        # but, this time, we know the qrcode position.
-                        # In this case, we don't send the None signal to the navigator, because we are already in recovery.
-                        # TODO: vedere come l'ha gestito Ferdinando. Non so se mettere prima lo stop oppure fare direttamente start
-                        if self._last_sign_is_None == False:
-                            self.pub_stop_recovery_case_2.publish(self._msg_true)
-                            str_msg = "Start_" + self._last_position_qr
-                            self._pub_msg(self.pub_recovery, str_msg)
-                            self._i = 0
+                            if self._i <= self._max_limit:
+                                if self._start_conter_None:
+                                    self._i += 1
+                                    print("i + 1", self._i)
+                            elif self._turtlebot_is_stopped: # TODO: Prima c'era semplicemente un else. Adesso è stata aggiunta questa condizione perchè bisogna far partire la recovery solo se è fermo
+                                # If the counter is greater than the limit we start the recovery
+                                # From the moment that we see the signal, we know the qrcode position
+                                
+                                str_msg = "Start_" + self._last_position_qr 
+                                self._pub_msg(self.pub_recovery, str_msg)
+                                print("Inizio recovery:", str_msg)
+                                self._i = 0
+                                self._is_recovery = True
+                        else:
+                            # If we are in recovery without seeing qr code and now we see the signal None, we restart the recovery,
+                            # but, this time, we know the qrcode position.
+                            # In this case, we don't send the None signal to the navigator, because we are already in recovery.
+                            # TODO: vedere come l'ha gestito Ferdinando. Non so se mettere prima lo stop oppure fare direttamente start
+                            if self._last_sign_is_None == False:
+                                self.pub_stop_recovery_case_2.publish(self._msg_true)
+                                str_msg = "Start_" + self._last_position_qr
+                                self._pub_msg(self.pub_recovery, str_msg)
+                                self._i = 0
+                                self._last_sign_is_None = True
+
+
+                        # Update last_sign_is_None variable
+                        if self._start_conter_None:
                             self._last_sign_is_None = True
 
-
-                    # Update last_sign_is_None variable
-                    if self._start_conter_None:
-                        self._last_sign_is_None = True
-
-                # If the detected signal is not None we send it to the navigator and stop recovery
-                else:
-                    if self._is_recovery == True:
-                        # self._pub_msg(self.pub_recovery, "Stop") # TODO: Assicurati che la recovery si sia fermata
-                        self.pub_stop_recovery_case_1.publish(self._msg_true)
-                        self.pub_stop_recovery_case_2.publish(self._msg_true)
-                        self._is_recovery = False
-                    print("Signal", read_signal)
-                    self._i = 0
-                    
-                    self._last_sign_is_None = False
-                    
-                    self._pub_msg(self.pub_navigation, read_signal)
-            else:
-                read_signal = ""
-        elif self._is_recovery == False:
-            # If we don't detect anything and we are not in recovery we increment the counter
-            # This means two things:
-            # 1. The robot has reached the goal and has not detected any signal (goal_reached = True)
-            # 2. The robot has detected a signal (last_sign = 'None'), but for some frames it has not detected anything
-            if self._turtlebot_is_stopped == True or self._last_sign_is_None == True:
-
-                self._i += 1
-                print("i + 1", self._i, self._turtlebot_is_stopped, self._last_sign_is_None)
-                if self._i > self._max_limit:
-
-                    ################################################################################### # TODO: In questo pezzo di codice si tiene conto del fatto che il qrcode visto precedentemente fosse un None, e adesso non si vede più nulla. Credo che questo venga in ognicaso gestito automaticamente
-                    # If the counter is greater than the limit we start the recovery
-                    
-                    if self._last_sign_is_None == True:
-                        self._pub_msg(self.pub_recovery, "Start_" + self._last_position_qr) # TODO: Change the value of the message
+                    # If the detected signal is not None we send it to the navigator and stop recovery
                     else:
-                        self._pub_msg(self.pub_recovery, "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) )
-                    ###################################################################################
+                        if self._is_recovery == True:
+                            # self._pub_msg(self.pub_recovery, "Stop") # TODO: Assicurati che la recovery si sia fermata
+                            self.pub_stop_recovery_case_1.publish(self._msg_true)
+                            self.pub_stop_recovery_case_2.publish(self._msg_true)
+                            self._is_recovery = False
+                        print("Signal", read_signal)
+                        self._i = 0
+                        
+                        self._last_sign_is_None = False
+                        
+                        self._pub_msg(self.pub_navigation, read_signal)
+                else:
+                    read_signal = ""
+            elif self._is_recovery == False:
+                # If we don't detect anything and we are not in recovery we increment the counter
+                # This means two things:
+                # 1. The robot has reached the goal and has not detected any signal (goal_reached = True)
+                # 2. The robot has detected a signal (last_sign = 'None'), but for some frames it has not detected anything
+                if self._turtlebot_is_stopped == True or self._last_sign_is_None == True:
+
+                    self._i += 1
+                    print("i + 1", self._i, self._turtlebot_is_stopped, self._last_sign_is_None)
+                    if self._i > self._max_limit:
+
+                        ################################################################################### # TODO: In questo pezzo di codice si tiene conto del fatto che il qrcode visto precedentemente fosse un None, e adesso non si vede più nulla. Credo che questo venga in ognicaso gestito automaticamente
+                        # If the counter is greater than the limit we start the recovery
+                        
+                        if self._last_sign_is_None == True:
+                            self._pub_msg(self.pub_recovery, "Start_" + self._last_position_qr) # TODO: Change the value of the message
+                        else:
+                            self._pub_msg(self.pub_recovery, "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) )
+                        ###################################################################################
 
 
 
 
 
-                    self._i = 0
-                    self._is_recovery = True
+                        self._i = 0
+                        self._is_recovery = True
 
-        self._update_counter_None(read_signal, qr_code_width)
+            self._update_counter_None(read_signal, qr_code_width)
 
-            # if self._turtlebot_is_stopped == True or self._last_sign_is_None == True:
-            #     self._i += 1
-            #     if self._i == self._max_limit:
-            #         # If the counter is greater than the limit we start the recovery
+                # if self._turtlebot_is_stopped == True or self._last_sign_is_None == True:
+                #     self._i += 1
+                #     if self._i == self._max_limit:
+                #         # If the counter is greater than the limit we start the recovery
 
-            #         if self._last_sign_is_None == True: # TODO: Assicurati che il turtlebot sia fermo
-            #             self._pub_msg(self.pub_recovery, "Start_alpha") # TODO: Change the value of the message
-            #         else:
-            #             self._pub_msg(self.pub_recovery, "Start")
-            #         self._i = 0
-            #         self._is_recovery = True
+                #         if self._last_sign_is_None == True: # TODO: Assicurati che il turtlebot sia fermo
+                #             self._pub_msg(self.pub_recovery, "Start_alpha") # TODO: Change the value of the message
+                #         else:
+                #             self._pub_msg(self.pub_recovery, "Start")
+                #         self._i = 0
+                #         self._is_recovery = True
 
-        print("")
-        print("Signal", read_signal_list)
-        print("i", self._i)
-        print("recovery", self._is_recovery)
-        print("turtlebot_is_stopped", self._turtlebot_is_stopped)
-        print("last_sign_is_None", self._last_sign_is_None)
-        print("counter_None", self._counter_None)
-        print("start_counter_None", self._start_conter_None)
+
+            print("")
+            print("Signal", read_signal_list)
+            print("i", self._i)
+            print("recovery", self._is_recovery)
+            print("turtlebot_is_stopped", self._turtlebot_is_stopped)
+            print("last_sign_is_None", self._last_sign_is_None)
+            print("counter_None", self._counter_None)
+            print("start_counter_None", self._start_conter_None)
+
+        else:
+            print("I read STOP. Finished")
+            self.pub_stop_recovery_case_1.publish(self._msg_true)
+            self.pub_stop_recovery_case_2.publish(self._msg_true)
             
         # Problemi che potrebbero sorgere:
         # 1. Quando la recovery blocca il task, il navigator potrebbe un attimo prima avviare un nuovo task. Questo potrebbe creare problemi. Credo.
