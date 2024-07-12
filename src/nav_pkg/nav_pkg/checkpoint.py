@@ -80,9 +80,10 @@ class Checkpoint(Node):
             direction = old_junction_object.get_direction_by_destination(new_junction)
             x, y = old_junction_object._get_bbox_point(direction)
             self.curret_junction = new_junction
-            print(f'I\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
+            print(f'\nI\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
             self.last_checkpoint = [x, y]
             self.last_direction = direction
+            print(f'Yaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
 
 
 
@@ -95,9 +96,10 @@ class Checkpoint(Node):
                 junction_object = self.junctions.get_junction_by_name(self.curret_junction)
                 x = junction_object.get_x()
                 y = junction_object.get_y()
-                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}')
+                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}')
                 self.last_checkpoint = [x, y]
                 self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+                print(f'\nYaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
         else:
             self.in_junction = True
 
