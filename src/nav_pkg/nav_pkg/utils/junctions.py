@@ -118,7 +118,7 @@ class Junctions():
             next_direction = (current_direction - 90)%360
         elif sign == Signs.GOBACK.value: 
             next_direction = (current_direction - 180)%360
-        elif sign == Signs.STRAIGHTON.value or sign == Signs.STOP:
+        elif sign == Signs.STRAIGHTON.value or sign == Signs.STOP.value:
             next_direction = current_direction%360
         else: 
             raise Exception(f'Questo segnale ({sign} non esiste)')
