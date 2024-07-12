@@ -37,13 +37,13 @@ class MyPose():
             yaw = math.atan2(2 * (w * z + x * y), 1 - 2 * (y**2 + z**2))
             return yaw
         
-        def set_pose_from_msg(self, msg):
+        def test_set_pose_from_msg(self, msg):
             x, y = msg.data.split(',')
             x = float(x)
             y = float(y)
             self.set_pose(x, y, 0)
 
-        def true_set_pose_from_msg(self, msg):
+        def set_pose_from_msg(self, msg):
             current_pose = msg.pose.pose
             yaw = self.euler_from_quaternion(current_pose.orientation)
             self.set_pose(current_pose.position.x, current_pose.position.y, math.degrees(yaw))

@@ -29,9 +29,9 @@ class JunctionPoint():
         
 
     def is_in_bbox(self, x, y, offset_type=None): 
-        if offset_type is None: 
-            offset_type = OffsetDetection
-        assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
+        # if offset_type is None: 
+        #     offset_type = OffsetDetection
+        assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint, None], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
         result = True
         if not x < self.get_bbox_x(TurtleBot4Directions.SOUTH, offset_type): 
             result = False
@@ -65,8 +65,15 @@ class JunctionPoint():
         return x, y
     
     def _get_complete_bbox_point(self, direction:TurtleBot4Directions): 
-        x_offset = math.ceil(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2)
-        y_offset = math.ceil(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2)
+        adj_junction = self.get_adjacent_junction(direction)
+        if adj_junction is None: 
+            x_add = self.get_x() + OffsetDetection.x_offset.value
+            y_add = self.get_y() + OffsetDetection.y_offset.value
+        else: 
+            x_add = adj_junction.get_x()
+            y_add = adj_junction.get_y()
+        x_offset = math.ceil(abs(self.get_x() - x_add)/2)
+        y_offset = math.ceil(abs(self.get_y() - y_add)/2)
 
         if direction == TurtleBot4Directions.NORTH:
             y = self.get_y()
@@ -80,7 +87,9 @@ class JunctionPoint():
         elif direction == TurtleBot4Directions.WEST: 
             y = self.get_y() + y_offset
             x = self.get_x() 
-            
+
+        # x = x_offset
+        # y = y_offset
         return x, y
 
 

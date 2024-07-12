@@ -27,14 +27,8 @@ class Checkpoint(Node):
             depth=10  # Puoi adattare il valore in base alle tue esigenze
         )
         amcl_cb_group = ReentrantCallbackGroup()
-        # self.subscription = self.create_subscription(
-        #     PoseWithCovarianceStamped,
-        #     '/amcl_pose',
-        #     self.listener_callback_amcl,
-        #     qos_profile,
-        #     callback_group=amcl_cb_group)
         self.subscription = self.create_subscription(
-            String,
+            PoseWithCovarianceStamped,
             '/amcl_pose',
             self.listener_callback_amcl,
             qos_profile,
@@ -122,6 +116,7 @@ class Checkpoint(Node):
             print(f'\nMid corridor - Entering the {self.curret_junction} zone.') 
             self.last_checkpoint = [x, y]
             self.last_direction = direction
+            # self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
             self.print_checkpoint()
 
 
@@ -143,7 +138,7 @@ class Checkpoint(Node):
             self.in_junction = True
 
     def print_checkpoint(self): 
-        print(f'New checkpoint: x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {self.junctions.convert_directions(self.last_direction)}')
+        print(f'New checkpoint: x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {self.junctions.convert_directions(self.last_direction).name}')
 
                 
 
