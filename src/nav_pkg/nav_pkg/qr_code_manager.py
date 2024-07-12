@@ -12,9 +12,10 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPo
 from rclpy.callback_groups import ReentrantCallbackGroup
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_pkg.utils.junctions import Junctions
+import argparse
 
 class QRCodeManager(Node):
-    def __init__(self):
+    def __init__(self, start_junction):
         super().__init__('qr_code_manager')
         
         cb_group_process_image = ReentrantCallbackGroup()
@@ -38,7 +39,8 @@ class QRCodeManager(Node):
 
         self.pub_navigation = self.create_publisher(String, '/road_sign', qos_profile)
         self.pub_recovery = self.create_publisher(String, '/recovery', qos_profile)
-        self.pub_stop_recovery = self.create_publisher(Bool, '/stop_recovery', qos_profile)
+        self.pub_stop_recovery_case_1 = self.create_publisher(Bool, '/stop_recovery_case_1', qos_profile)
+        self.pub_stop_recovery_case_2 = self.create_publisher(Bool, '/stop_recovery_case_2', qos_profile)
         self._msg_true = Bool()
         self._msg_true.data = True
 
@@ -54,7 +56,7 @@ class QRCodeManager(Node):
         self._img_width = 1000
         self._img_height = 1000
 
-        self._max_limit = 50 # Limit beyond which the robot is stationary
+        self._max_limit = 25 # Limit beyond which the robot is stationary
         self._i = 0 # Counter for the number of times the sign is detected as None
         self._is_recovery = False
         self._last_sign_is_None = False
@@ -64,7 +66,7 @@ class QRCodeManager(Node):
         self._counter_None = 0
         self._None_qr_code_width = 10 # TODO: test this value
 
-        self._old_junction = "C"
+        self._old_junction = start_junction
 
         self._junctions = Junctions()
 
@@ -233,11 +235,13 @@ class QRCodeManager(Node):
         bool: True if the qr is the same as the previous one, False otherwise
         '''
 
-        new_junc = self.get_qr_junction(distance, rotation_angle) 
+        new_junc = self.get_qr_junction(distance, rotation_angle)
+        print("Nuovo incrocio:", new_junc, self._old_junction)
         if new_junc == self._old_junction:
             return True
         else:
             if qr_code_string != "None":
+                print("Update old junction in", new_junc)
                 self._old_junction = new_junc
             return False
         
@@ -273,8 +277,8 @@ class QRCodeManager(Node):
         # else:
         #     read_signal_list = [data.data]
 
-        read_signal = ""
-        qr_code_width = None
+        # read_signal = ""
+        # qr_code_width = None
         
         if len(read_signal_list) > 0:
             # If something is detected we enter in this block
@@ -288,14 +292,14 @@ class QRCodeManager(Node):
                 self._last_position_qr = ""
 
             rotation_angle, distance, qr_code_width, _ = self.get_qr_informations(cv_image)
-
+            # rotation_angle, distance, qr_code_width = 72, 15, 30
 
             # If the detected signal is not the same as the previous one we send it to the navigator
             if not self.filter_image(distance, rotation_angle, read_signal):
                 
                 # If the detected signal is None we increment the counter
                 if read_signal == "None":
-                    self._last_position_qr = str(int(rotation_angle))
+                    self._last_position_qr = str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + str(int(rotation_angle))
                     if self._is_recovery == False:
                         # The first None detected si send to navigator
                         print("Inviiato il None?", self._counter_None, self._i, not self._turtlebot_is_stopped)
@@ -312,7 +316,7 @@ class QRCodeManager(Node):
                             # If the counter is greater than the limit we start the recovery
                             # From the moment that we see the signal, we know the qrcode position
                             
-                            str_msg = "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + self._last_position_qr 
+                            str_msg = "Start_" + self._last_position_qr 
                             self._pub_msg(self.pub_recovery, str_msg)
                             print("Inizio recovery:", str_msg)
                             self._i = 0
@@ -323,10 +327,12 @@ class QRCodeManager(Node):
                         # In this case, we don't send the None signal to the navigator, because we are already in recovery.
                         # TODO: vedere come l'ha gestito Ferdinando. Non so se mettere prima lo stop oppure fare direttamente start
                         if self._last_sign_is_None == False:
-                            str_msg = "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + self._last_position_qr
+                            self.pub_stop_recovery_case_2.publish(self._msg_true)
+                            str_msg = "Start_" + self._last_position_qr
                             self._pub_msg(self.pub_recovery, str_msg)
                             self._i = 0
                             self._last_sign_is_None = True
+
 
                     # Update last_sign_is_None variable
                     if self._start_conter_None:
@@ -336,7 +342,8 @@ class QRCodeManager(Node):
                 else:
                     if self._is_recovery == True:
                         # self._pub_msg(self.pub_recovery, "Stop") # TODO: Assicurati che la recovery si sia fermata
-                        self.pub_stop_recovery.publish(self._msg_true)
+                        self.pub_stop_recovery_case_1.publish(self._msg_true)
+                        self.pub_stop_recovery_case_2.publish(self._msg_true)
                         self._is_recovery = False
                     print("Signal", read_signal)
                     self._i = 0
@@ -361,7 +368,7 @@ class QRCodeManager(Node):
                     # If the counter is greater than the limit we start the recovery
                     
                     if self._last_sign_is_None == True:
-                        self._pub_msg(self.pub_recovery, "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) + "_" + self._last_position_qr) # TODO: Change the value of the message
+                        self._pub_msg(self.pub_recovery, "Start_" + self._last_position_qr) # TODO: Change the value of the message
                     else:
                         self._pub_msg(self.pub_recovery, "Start_" + str(round(self._my_pose.get_x(), 2)) + "_" + str(round(self._my_pose.get_y(), 2)) + "_" + str(round(self._my_pose.get_yaw(), 2)) )
                     ###################################################################################
@@ -412,10 +419,15 @@ class QRCodeManager(Node):
         
  
 def main(args=None):
+    
+    parser = argparse.ArgumentParser(description='QR Code Manager')
+    parser.add_argument('--start_junction', type=str, help='Junction where the robot starts')
+
+    start_junction = parser.parse_args().start_junction
     rclpy.init(args=args)
     cv2.setUseOptimized(True)
     cv2.cuda.setDevice(0)
-    qr_code_reader = QRCodeManager()
+    qr_code_reader = QRCodeManager(start_junction)
     rclpy.spin(qr_code_reader)
     rclpy.shutdown()
 

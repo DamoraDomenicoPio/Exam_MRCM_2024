@@ -24,17 +24,21 @@ class Qr_recovery(Node):
 
         cb_group_recovery = ReentrantCallbackGroup()
         cb_group_is_turtlebot_stopped = ReentrantCallbackGroup()
-        cb_group_stop_recovery = ReentrantCallbackGroup()
+        cb_group_stop_recovery_case_1 = ReentrantCallbackGroup()
+        cb_group_stop_recovery_case_2 = ReentrantCallbackGroup()
 
         self.subscription = self.create_subscription(String, '/recovery', self.listener_callback, qos_profile, callback_group=cb_group_recovery)
+
         self.sub_is_turtlebot_stopped = self.create_subscription(Bool, '/turtlebot_is_stopped', self.turtlebot_is_stopped_callback, qos_profile, callback_group=cb_group_is_turtlebot_stopped)
-        self._sub_stop_recovery = self.create_subscription(Bool, "/stop_recovery", self.stop_recovery, qos_profile, callback_group=cb_group_stop_recovery)
+        self._sub_stop_recovery_case_1 = self.create_subscription(Bool, "/stop_recovery_case_1", self.stop_recovery_case_1, qos_profile, callback_group=cb_group_stop_recovery_case_1)
+        self._sub_stop_recovery_case_2 = self.create_subscription(Bool, "/stop_recovery_case_2", self.stop_recovery_case_2, qos_profile, callback_group=cb_group_stop_recovery_case_2)
         print("INIZIALIZZAZIONE")
 
         self.pub_end_wp = self.create_publisher(WaypointMsg, '/end_wp', qos_profile)
 
         self._turtlebot_is_stopped = False
-        self._stop_recovery = False
+        self._stop_recovery_case_1 = True
+        self._stop_recovery_case_2 = True
 
         # self.finish_ack = self.create_publisher(Bool, "/finish_recovery", qos_profile) #Publisher
 
@@ -51,9 +55,13 @@ class Qr_recovery(Node):
         print("TURTLEBOT STOPPED", msg.data)
         self._turtlebot_is_stopped = msg.data
 
-    def stop_recovery(self, msg):
-        print("STOP RECOVERY:", msg.data)
-        self._stop_recovery = msg.data
+    def stop_recovery_case_1(self, msg):
+        print("STOP RECOVERY CASE 1:", msg.data)
+        self._stop_recovery_case_1 = msg.data
+
+    def stop_recovery_case_2(self, msg):
+        print("STOP RECOVERY CASE 2:", msg.data)
+        self._stop_recovery_case_2 = msg.data
 
     def listener_callback(self, msg):
         print("CALLBACK")
@@ -67,33 +75,48 @@ class Qr_recovery(Node):
 
             if len(command) == 5:
                 #caso 1
+                self._stop_recovery_case_1 = False
                 alpha = int(math.ceil(float(command[4])))
                 self.qr_code_seen( x, y, yaw,alpha)
             elif len(command) == 4:
                 #caso 2
+                self._stop_recovery_case_2 = False
                 self.pattern_movement(x, y, yaw)
             
     def _int_to_int_direction(self, num):
-        if (num >= 0 and num <= 45) or (num >= 315 and num <= 360):
+        if (num >= 0 and num <= 22.5) or (num >= 337.5 and num <= 360):
             return 0
-        elif num >= 225 and num <= 315:
+        elif num >= 247.5 and num <= 292.5:
             return 270
-        elif num >= 135 and num <= 225:
+        elif num >= 157.5 and num <= 202.5:
             return 180
-        elif num >= 45 and num <= 135:
+        elif num >= 67.5 and num <= 112.5:
             return 90
+        elif num >= 22.5 and num <= 67.5:
+            return 45
+        elif num >= 112.5 and num <= 157.5:
+            return 135
+        elif num >= 202.5 and num <= 247.5:
+            return 225
+        elif num >= 292.5 and num <= 337.5:
+            return 315
+        else:
+            print("Error in _int_to_int_direction")
 
     def qr_code_seen(self, x, y, yaw,alpha):
+            while not self._stop_recovery_case_2:
+                print("Attendo stop recovery case 2")
+                pass
             # vado avanti di 5 cm
             print("QR code seen")
-            new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 1.0)
+            new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 0.5)
             end_wp_msg = WaypointMsg()
             end_wp_msg.x = new_x
             end_wp_msg.y = new_y
             end_wp_msg.direction = (yaw+alpha)%360
-            if self._stop_recovery:
-                print("Stop recovery")
-                self._stop_recovery = False
+            if self._stop_recovery_case_1:
+                print("Stop recovery case 1")
+                
                 return
             
             
@@ -113,14 +136,14 @@ class Qr_recovery(Node):
 
 
             while True:
-                new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 1.0)
+
+                new_x,new_y=self.calculate_new_waypoint(x, y, yaw+alpha, 0.5)
                 end_wp_msg = WaypointMsg()
                 end_wp_msg.x = new_x
                 end_wp_msg.y = new_y
                 end_wp_msg.direction = direction
-                if self._stop_recovery:
-                    print("Stop recovery")
-                    self._stop_recovery = False
+                if self._stop_recovery_case_1:
+                    print("Stop recovery case 1")
                     return
                 
                 
@@ -168,9 +191,8 @@ class Qr_recovery(Node):
                 
                 # 20 gradi a sinistra
                 end_wp_msg.direction = (yaw + 45)%360
-                if self._stop_recovery:
-                    print("Stop recovery")
-                    self._stop_recovery = False
+                if self._stop_recovery_case_2:
+                    print("Stop recovery case 2")
                     return
                 print("Position - giro a sinistra: x: ", x, "y: ", y, "yaw: ", (yaw + 45)%360)
 
@@ -188,9 +210,8 @@ class Qr_recovery(Node):
                 # self.navigator.startToPose(rotation_pose)
                 # 20 gradi a destra
                 end_wp_msg.direction = (yaw - 45)%360
-                if self._stop_recovery:
-                    print("Stop recovery")
-                    self._stop_recovery = False
+                if self._stop_recovery_case_2:
+                    print("Stop recovery case 2")
                     return
                 print("Position - giro a destra: x: ", x, "y: ", y, "yaw: ", (yaw - 45)%360)
 
@@ -207,9 +228,8 @@ class Qr_recovery(Node):
                 print("Ho girato a sinistra")
                 # Torna dritto
                 end_wp_msg.direction = yaw%360
-                if self._stop_recovery:
-                    print("Stop recovery")
-                    self._stop_recovery = False
+                if self._stop_recovery_case_2:
+                    print("Stop recovery case 2")
                     return
                 print("Position - torno centrale: x: ", x, "y: ", y, "yaw: ", yaw%360)
                 
@@ -223,12 +243,11 @@ class Qr_recovery(Node):
                     pass
                 print("Son tornato dritto")
                 # Vai avanti di 5 cm
-                new_x,new_y=self.calculate_new_waypoint(x, y, yaw, 1.0)
+                new_x,new_y=self.calculate_new_waypoint(x, y, yaw, 0.5)
                 end_wp_msg.x = new_x
                 end_wp_msg.y = new_y
-                if self._stop_recovery:
-                    print("Stop recovery")
-                    self._stop_recovery = False
+                if self._stop_recovery_case_2:
+                    print("Stop recovery case 2")
                     return
                 print("Position - vado avanti: x: ", new_x, "y: ", new_y, "yaw: ", yaw)
 

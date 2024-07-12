@@ -84,7 +84,7 @@ Run this command in another terminal.
 ```sh
 cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
-ros2 run nav_pkg qr_code_manager
+ros2 run nav_pkg qr_code_manager --start_junction C
 ```
 
 ### QrCode recovery

@@ -48,8 +48,8 @@ class Navigation(Node):
         
         # Private attributes
         init_junction = self._junctions.get_junction_by_name(point_name)
-        self._start_wp = Waypoint(init_junction.get_x(), init_junction.get_y(), self._int_to_direction(direction))
-        # self._start_wp = Waypoint(0.0, 0.0, TurtleBot4Directions.NORTH)
+        # self._start_wp = Waypoint(init_junction.get_x(), init_junction.get_y(), self._int_to_direction(direction))
+        self._start_wp = Waypoint(0.0, 0.0, TurtleBot4Directions.NORTH)
         self._end_wp = Waypoint(self._start_wp.get_x(), self._start_wp.get_y(), self._start_wp.get_direction())
         self._is_set_start_wp = True
         self._is_set_end_wp = False
@@ -64,6 +64,9 @@ class Navigation(Node):
         # initial_pose = self._navigator.getPoseStamped([0.0, 0.0], TurtleBot4Directions.NORTH)
         
         self._navigator.setInitialPose(initial_pose)
+
+        # TODO: test
+        self._next_direction = direction
 
 
 
@@ -103,6 +106,7 @@ class Navigation(Node):
         #     end_wp_msg.y += 3.0
 
         end_wp_msg.direction = response.next_direction
+        self._next_direction = response.next_direction
         self.get_logger().info(f"Publishing end wp: {end_wp_msg}")
 
         while self._is_main_running == True:
@@ -158,7 +162,7 @@ class Navigation(Node):
             self._navigator.cancelTask()
             point_name = self._junctions.get_junction_by_point(self._end_wp.get_x(), self._end_wp.get_y())
             print("Point name", point_name)
-            self.send_request(point_name, self._end_wp.get_direction(), road_sign)
+            self.send_request(point_name, self._next_direction, road_sign)
 
             # msg = WaypointMsg()
             # msg.x = 0.0
