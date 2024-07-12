@@ -65,8 +65,8 @@ class JunctionPoint():
         return x, y
     
     def _get_complete_bbox_point(self, direction:TurtleBot4Directions): 
-        x = round(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2, 2)
-        y = round(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2, 2)
+        x = math.ceil(abs(self.get_x() - self.get_adjacent_junction(direction).get_x())/2, 2)
+        y = math.ceil(abs(self.get_y() - self.get_adjacent_junction(direction).get_y())/2, 2)
         return x, y
 
 
