@@ -146,8 +146,8 @@ class Checkpoint(Node):
 
     def publish_checkpoint(self):
         end_wp_msg = WaypointMsg()
-        end_wp_msg.x = self.last_checkpoint[0]
-        end_wp_msg.y = self.last_checkpoint[1]
+        end_wp_msg.x = float(self.last_checkpoint[0])
+        end_wp_msg.y = float(self.last_checkpoint[1])
         end_wp_msg.direction = self.last_direction
         print('Published')
         self.print_checkpoint()
