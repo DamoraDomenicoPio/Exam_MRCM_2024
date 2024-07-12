@@ -18,9 +18,12 @@ class MinimalPublisher(Node):
         self.publisher_ = self.create_publisher(String, '/road_sign', qos_profile)
 
 
-    def publish_straighton(self):
+    def publish_straighton(self, sign=Signs.STRAIGHTON):
+        if sign == '': 
+            sign = Signs.STRAIGHTON.value
+        assert sign in [Signs.GOBACK.value, Signs.LEFT.value, Signs.RIGHT.value, Signs.STOP.value, Signs.STRAIGHTON.value], 'Questo segnale non esiste'
         msg = String()
-        msg.data = Signs.STRAIGHTON.value
+        msg.data = sign
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing: "%s"' % msg.data)
 
@@ -32,9 +35,10 @@ def main(args=None):
     print('Test object created')
 
     while True: 
-        print('Press enter to send a STRAIGHTON...')
-        input()
-        minimal_publisher.publish_straighton()
+        print('\nPress enter to send a STRAIGHTON or write the signal:')
+        sign = input('Signal = ')
+        print(f'Sign = {sign}')
+        minimal_publisher.publish_straighton(sign)
 
 
 if __name__ == '__main__':

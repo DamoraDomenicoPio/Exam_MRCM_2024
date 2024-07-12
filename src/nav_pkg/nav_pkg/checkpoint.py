@@ -60,13 +60,13 @@ class Checkpoint(Node):
 
     def yaw_to_direction(self, yaw): 
         direction = None
-        if (yaw>=315 and yaw<=360) or (yaw>=0 and yaw<=45): 
+        if (yaw>=0 and yaw<=-45) or (yaw>=0 and yaw<=45): 
             direction = TurtleBot4Directions.NORTH
         elif yaw>=45 and yaw<=135: 
             direction = TurtleBot4Directions.WEST
-        elif yaw>=225 and yaw<=225: 
+        if (yaw>=135 and yaw<=-180) or (yaw>=-180 and yaw<=-135): 
             direction = TurtleBot4Directions.SOUTH
-        elif yaw>=225 and yaw<=315: 
+        elif yaw>=-180 and yaw<=-90: 
             direction = TurtleBot4Directions.EAST
         if direction is None: 
             raise Exception(f'La direzione {direction} non esiste')
@@ -80,9 +80,10 @@ class Checkpoint(Node):
             direction = old_junction_object.get_direction_by_destination(new_junction)
             x, y = old_junction_object._get_bbox_point(direction)
             self.curret_junction = new_junction
-            print(f'I\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
+            print(f'\nI\'m in a new junction: {self.curret_junction}. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}') 
             self.last_checkpoint = [x, y]
-            # self.last_direction = direction
+            self.last_direction = direction
+            print(f'Yaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
 
 
 
@@ -95,9 +96,10 @@ class Checkpoint(Node):
                 junction_object = self.junctions.get_junction_by_name(self.curret_junction)
                 x = junction_object.get_x()
                 y = junction_object.get_y()
-                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}. Yaw = {self.current_pose.get_yaw()}')
+                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}')
                 self.last_checkpoint = [x, y]
-                # self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+                self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+                print(f'\nYaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
         else:
             self.in_junction = True
 
