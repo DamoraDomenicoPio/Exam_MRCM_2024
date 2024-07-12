@@ -94,6 +94,23 @@ cd ~/Scrivania/Exam_MRCM_2024
 source install/setup.bash
 ros2 run nav_pkg recovery_node
 ```
+
+### Checkpoint node
+Run this command in another terminal.
+```sh
+cd ~/Scrivania/Exam_MRCM_2024
+source install/setup.bash
+ros2 run nav_pkg checkpoint C
+```
+
+### Starter node
+Run this command in another terminal.
+```sh
+cd ~/Scrivania/Exam_MRCM_2024
+source install/setup.bash
+ros2 run nav_pkg starter
+```
+
 ## Try your nodes
 
 Try navigation node changing startpoint in code e giving end point through this command on bash:

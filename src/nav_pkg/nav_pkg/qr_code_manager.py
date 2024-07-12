@@ -13,6 +13,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_pkg.utils.junctions import Junctions
 import argparse
+from irobot_create_msgs.msg import KidnapStatus
 
 class QRCodeManager(Node):
     def __init__(self, start_junction):
@@ -22,6 +23,7 @@ class QRCodeManager(Node):
         cb_group_is_turtlebot_stopped = ReentrantCallbackGroup()
         pose_cb_group = ReentrantCallbackGroup()
         cb_group_process_image = ReentrantCallbackGroup()
+        kidnapped_cb_group = ReentrantCallbackGroup()
         # self.sub_process_image = self.create_subscription(String, '/prova_str', self.listener_callback, 10, callback_group=cb_group_process_image)
         
         qos_profile = QoSProfile(
@@ -31,10 +33,17 @@ class QRCodeManager(Node):
             depth=10  # Puoi adattare il valore in base alle tue esigenze
         )
 
+        qos_profile_kidnapped = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10  # Puoi adattare il valore in base alle tue esigenze
+        )
+
         self.sub_process_image = self.create_subscription(CompressedImage, '/oakd/rgb/preview/image_raw/compressed', self.listener_callback, 10, callback_group = cb_group_process_image)
         self.sub_is_turtlebot_stopped = self.create_subscription(Bool, '/turtlebot_is_stopped', self.turtlebot_is_stopped_callback, qos_profile, callback_group=cb_group_is_turtlebot_stopped)
         self.sub_pose = self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose', self.pose_callback, qos_profile, callback_group=pose_cb_group)
-        
+        self.subscription = self.create_subscription(KidnapStatus, '/kidnap_status', self.listener_callback_kidnapped, qos_profile_kidnapped, callback_group=kidnapped_cb_group)        
 
 
         self.pub_navigation = self.create_publisher(String, '/road_sign', qos_profile)
@@ -45,7 +54,7 @@ class QRCodeManager(Node):
         self._msg_true.data = True
 
         self.bridge = CvBridge()
-        self.old_sign = ""
+        # self.old_sign = ""
 
         self._reader = QReader()
 
@@ -64,7 +73,7 @@ class QRCodeManager(Node):
         
         # For evoiding the first None signal to be sent to the navigator (False positive)
         self._counter_None = 0
-        self._None_qr_code_width = 10 # TODO: test this value
+        self._None_qr_code_width = 30 # TODO: test this value
 
         self._old_junction = start_junction
 
@@ -74,11 +83,14 @@ class QRCodeManager(Node):
 
         self._last_position_qr = ""
 
-        # This variable is used to avoid start counnting the None signal if we see it for the first time
+        # This variable is used to avoid start counting the None signal if we see it for the first time
         self._start_conter_None = False
 
         self._stop_manager = False
+        self._is_kidnapped = False
 
+    def listener_callback_kidnapped(self, msg): 
+        self._is_kidnapped = msg.is_kidnapped
 
     class MyPose():
         def __init__(self, x=0.0, y=0.0, yaw=0.0):
@@ -191,7 +203,7 @@ class QRCodeManager(Node):
         end_point = (int(detected[0]['bbox_xyxy'][2]), int(detected[0]['bbox_xyxy'][3]))
         bbox_center_x = (start_point[0] + end_point[0]) / 2
         # bbox_center_y = (start_point[1] + end_point[1]) / 2
-        rotation_angle = -self.calculate_rotation_angle(bbox_center_x, self._img_width, self._camera_fov)
+        rotation_angle = -1 * self.calculate_rotation_angle(bbox_center_x, self._img_width, self._camera_fov)
         print("Angolo di rotazione: ", rotation_angle)
         qr_code_size = 0
 
@@ -272,7 +284,7 @@ class QRCodeManager(Node):
         # print("Image size", cv_image.shape)
         read_signal_list = self._reader.detect_and_decode(image=cv_image)
 
-        if not self._stop_manager:
+        if not self._stop_manager or self._is_kidnapped:
 
             # if data.data == "":
             #     read_signal_list = []
@@ -416,6 +428,13 @@ class QRCodeManager(Node):
             print("I read STOP. Finished")
             self.pub_stop_recovery_case_1.publish(self._msg_true)
             self.pub_stop_recovery_case_2.publish(self._msg_true)
+            self._i = 0
+            self._is_recovery = False
+            self._counter_None = 0
+            self._last_sign_is_None = False
+            self._turtlebot_is_stopped = False
+            self._start_conter_None = False
+
             
         # Problemi che potrebbero sorgere:
         # 1. Quando la recovery blocca il task, il navigator potrebbe un attimo prima avviare un nuovo task. Questo potrebbe creare problemi. Credo.

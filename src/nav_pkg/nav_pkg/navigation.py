@@ -10,6 +10,7 @@ from nav_pkg.utils.junctions import Junctions
 from my_msgs.msg import WaypointMsg
 from my_msgs.srv import GetNextWp
 import argparse
+from irobot_create_msgs.msg import KidnapStatus
 
 class Navigation(Node):
     def __init__(self, point_name, direction):
@@ -30,6 +31,8 @@ class Navigation(Node):
         road_sign_cb_group = ReentrantCallbackGroup()
         # turtlebot_is_stopped_cb_group = ReentrantCallbackGroup()
 
+        kidnapped_cb_group = ReentrantCallbackGroup()
+
         qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
@@ -37,10 +40,21 @@ class Navigation(Node):
             depth=10  # Puoi adattare il valore in base alle tue esigenze
         )
 
+        qos_profile_kidnapped = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10  # Puoi adattare il valore in base alle tue esigenze
+        )
+        
+        
+
         # Subscribers
         # # self.sub_start_wp = self.create_subscription(WaypointMsg, "/start_wp", self.start_wp_callback, qos_profile, callback_group=start_wp_cb_group)
         self.sub_end_wp = self.create_subscription(WaypointMsg, "/end_wp", self.end_wp_callback, qos_profile, callback_group=end_wp_cb_group)
         self.sub_road_sign = self.create_subscription(String, "/road_sign", self.road_sign_callback , qos_profile, callback_group=road_sign_cb_group)
+
+        self.subscription = self.create_subscription(KidnapStatus, '/kidnap_status', self.listener_callback_kidnapped, qos_profile_kidnapped, callback_group=kidnapped_cb_group)
         # Publishers
         # self.pub_goal_reached = self.create_publisher(Bool, '/goal_reached', qos_profile)
         self.pub_turtlebot_is_stopped = self.create_publisher(Bool, '/turtlebot_is_stopped', qos_profile)
@@ -67,11 +81,27 @@ class Navigation(Node):
 
         # TODO: test
         self._next_direction = direction
+        self._next_end_wp = Waypoint(self._start_wp.get_x(), self._start_wp.get_y(), self._start_wp.get_direction())
+
+        self._send_end_wp_kidnapped = True
 
 
 
-        # Timers
-        # self.timer_check_wp = self.create_timer(1, self.check_waypoints)
+    def listener_callback_kidnapped(self, msg): 
+        if msg.is_kidnapped:
+            if self._send_end_wp_kidnapped:
+                self._navigator.cancelTask()
+                self._is_main_running = False
+                self._is_set_end_wp = False
+                self._is_set_start_wp = False
+                end_wp_msg = WaypointMsg()
+                end_wp_msg.x = self._next_end_wp.get_x()
+                end_wp_msg.y = self._next_end_wp.get_y()
+                end_wp_msg.direction = self._next_end_wp.get_direction()
+                self.pub_end_wp.publish(end_wp_msg)
+                self._send_end_wp_kidnapped = False
+        else:
+            self._send_end_wp_kidnapped = True
 
     def send_request(self, point_name, direction, sign):
         print()
@@ -106,6 +136,7 @@ class Navigation(Node):
         #     end_wp_msg.y += 3.0
 
         end_wp_msg.direction = response.next_direction
+        self._next_end_wp = Waypoint(response.next_x, response.next_y, self._int_to_direction(response.next_direction))
         self._next_direction = response.next_direction
         self.get_logger().info(f"Publishing end wp: {end_wp_msg}")
 
@@ -161,6 +192,8 @@ class Navigation(Node):
         else:
             if road_sign != "STOP":
                 self._navigator.cancelTask()
+                print("Signal readed:", road_sign)
+                print("Coordinates:", self._end_wp.get_x(), self._end_wp.get_y())
                 point_name = self._junctions.get_junction_by_point(self._end_wp.get_x(), self._end_wp.get_y())
                 print("Point name", point_name)
                 self.send_request(point_name, self._next_direction, road_sign)
@@ -196,7 +229,7 @@ class Navigation(Node):
         else:
             print("Start wp is already set")
 
-        if self._is_set_end_wp and not self._is_main_running:
+        if self._is_set_end_wp and self._is_set_start_wp and not self._is_main_running:
             self._is_main_running = True
             self.navigation()
         
