@@ -189,7 +189,7 @@ class QRCodeManager(Node):
         end_point = (int(detected[0]['bbox_xyxy'][2]), int(detected[0]['bbox_xyxy'][3]))
         bbox_center_x = (start_point[0] + end_point[0]) / 2
         # bbox_center_y = (start_point[1] + end_point[1]) / 2
-        rotation_angle = self.calculate_rotation_angle(bbox_center_x, self._img_width, self._camera_fov)
+        rotation_angle = -self.calculate_rotation_angle(bbox_center_x, self._img_width, self._camera_fov)
         print("Angolo di rotazione: ", rotation_angle)
         qr_code_size = 0
 
@@ -277,8 +277,8 @@ class QRCodeManager(Node):
         # else:
         #     read_signal_list = [data.data]
 
-        # read_signal = ""
-        # qr_code_width = None
+        read_signal = ""
+        qr_code_width = None
         
         if len(read_signal_list) > 0:
             # If something is detected we enter in this block
