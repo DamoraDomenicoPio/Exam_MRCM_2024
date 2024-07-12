@@ -96,10 +96,10 @@ class Checkpoint(Node):
                 junction_object = self.junctions.get_junction_by_name(self.curret_junction)
                 x = junction_object.get_x()
                 y = junction_object.get_y()
-                print(f'Just entered a corridor. New checkpoint: x = {x}, y = {y}')
+                print(f'\nJust entered a corridor. New checkpoint: x = {x}, y = {y}')
                 self.last_checkpoint = [x, y]
                 self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
-                print(f'\nYaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
+                print(f'Yaw = {self.current_pose.get_yaw()}, direction = {self.last_direction}')
         else:
             self.in_junction = True
 
