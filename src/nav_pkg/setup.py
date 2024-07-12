@@ -21,14 +21,10 @@ setup(
     entry_points={
         'console_scripts': [
             "navigation = nav_pkg.navigation:main",
-            "qr_code_reader = nav_pkg.qr_code_reader:main",
             "next_waypoint = nav_pkg.next_waypoint:main",
-            "dummy_client = nav_pkg.dummy_client:main",
             "qr_code_manager = nav_pkg.qr_code_manager:main",
             "recovery_node = nav_pkg.qr_recovery:main",
             "starter = nav_pkg.starter:main", 
-            "amcl_pose_dummy_publisher = nav_pkg.amcl_pose_dummy_publisher:main",
-            "minimal_publisher = nav_pkg.minimal_publisher:main",
             "checkpoint = nav_pkg.checkpoint:main"
         ],
     },

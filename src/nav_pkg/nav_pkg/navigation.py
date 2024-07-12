@@ -25,7 +25,7 @@ class Navigation(Node):
 
 
 
-        # start_wp_cb_group = ReentrantCallbackGroup()
+        start_wp_cb_group = ReentrantCallbackGroup()
         end_wp_cb_group = ReentrantCallbackGroup()
         # goal_reached_cb_group = ReentrantCallbackGroup()
         road_sign_cb_group = ReentrantCallbackGroup()
@@ -50,7 +50,7 @@ class Navigation(Node):
         
 
         # Subscribers
-        # # self.sub_start_wp = self.create_subscription(WaypointMsg, "/start_wp", self.start_wp_callback, qos_profile, callback_group=start_wp_cb_group)
+        self.sub_start_wp = self.create_subscription(WaypointMsg, "/start_wp", self.start_wp_callback, qos_profile, callback_group=start_wp_cb_group)
         self.sub_end_wp = self.create_subscription(WaypointMsg, "/end_wp", self.end_wp_callback, qos_profile, callback_group=end_wp_cb_group)
         self.sub_road_sign = self.create_subscription(String, "/road_sign", self.road_sign_callback , qos_profile, callback_group=road_sign_cb_group)
 
@@ -91,6 +91,8 @@ class Navigation(Node):
         if msg.is_kidnapped:
             if self._send_end_wp_kidnapped:
                 self._navigator.cancelTask()
+                while self._is_main_running == True:
+                    pass
                 self._is_main_running = False
                 self._is_set_end_wp = False
                 self._is_set_start_wp = False
@@ -98,6 +100,7 @@ class Navigation(Node):
                 end_wp_msg.x = self._next_end_wp.get_x()
                 end_wp_msg.y = self._next_end_wp.get_y()
                 end_wp_msg.direction = self._next_end_wp.get_direction()
+                print("Pubblicazione endwp kidnapped", end_wp_msg.x, end_wp_msg.y, end_wp_msg.direction)
                 self.pub_end_wp.publish(end_wp_msg)
                 self._send_end_wp_kidnapped = False
         else:
@@ -136,7 +139,11 @@ class Navigation(Node):
         #     end_wp_msg.y += 3.0
 
         end_wp_msg.direction = response.next_direction
+
         self._next_end_wp = Waypoint(response.next_x, response.next_y, self._int_to_direction(response.next_direction))
+        print("''''''''''''''''''''''''''''''")
+        print("NEXT WP", self._next_end_wp.get_x(), self._next_end_wp.get_y(), self._next_end_wp.get_direction())
+        print("''''''''''''''''''''''''''''''''''")
         self._next_direction = response.next_direction
         self.get_logger().info(f"Publishing end wp: {end_wp_msg}")
 
@@ -260,7 +267,7 @@ class Navigation(Node):
         print("IS MAIN RUNNING IN END MAIN", self._is_main_running)
         print(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,")
         self._is_main_running = False
-        self._start_wp = None
+        # self._start_wp = None
         # self._end_wp = None
         self._is_set_end_wp = False
 

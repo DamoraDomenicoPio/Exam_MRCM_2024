@@ -27,7 +27,7 @@ class JunctionCoordinates(Enum):
 #     y_offset = 5
 
 class OffsetDetection(Enum):
-    x_offset = 10
+    x_offset = 12
     y_offset = 5
 
 class OffsetsRecovery(Enum):

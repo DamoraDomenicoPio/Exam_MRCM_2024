@@ -65,7 +65,7 @@ class QRCodeManager(Node):
         self._img_width = 1000
         self._img_height = 1000
 
-        self._max_limit = 25 # Limit beyond which the robot is stationary
+        self._max_limit = 100 # Limit beyond which the robot is stationary
         self._i = 0 # Counter for the number of times the sign is detected as None
         self._is_recovery = False
         self._last_sign_is_None = False
@@ -90,7 +90,9 @@ class QRCodeManager(Node):
         self._is_kidnapped = False
 
     def listener_callback_kidnapped(self, msg): 
+        
         self._is_kidnapped = msg.is_kidnapped
+        print("Kidnapped", self._is_kidnapped)
 
     class MyPose():
         def __init__(self, x=0.0, y=0.0, yaw=0.0):
@@ -284,7 +286,17 @@ class QRCodeManager(Node):
         # print("Image size", cv_image.shape)
         read_signal_list = self._reader.detect_and_decode(image=cv_image)
 
-        if not self._stop_manager or self._is_kidnapped:
+        if self._is_kidnapped:
+            self.pub_stop_recovery_case_1.publish(self._msg_true)
+            self.pub_stop_recovery_case_2.publish(self._msg_true)
+            self._i = 0
+            self._is_recovery = False
+            self._counter_None = 0
+            self._last_sign_is_None = False
+            self._turtlebot_is_stopped = False
+            self._start_conter_None = False
+            return
+        if not self._stop_manager:
 
             # if data.data == "":
             #     read_signal_list = []
@@ -426,14 +438,7 @@ class QRCodeManager(Node):
 
         else:
             print("I read STOP. Finished")
-            self.pub_stop_recovery_case_1.publish(self._msg_true)
-            self.pub_stop_recovery_case_2.publish(self._msg_true)
-            self._i = 0
-            self._is_recovery = False
-            self._counter_None = 0
-            self._last_sign_is_None = False
-            self._turtlebot_is_stopped = False
-            self._start_conter_None = False
+
 
             
         # Problemi che potrebbero sorgere:

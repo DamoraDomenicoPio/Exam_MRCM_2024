@@ -56,15 +56,16 @@ class Checkpoint(Node):
 
         # Instance variables 
         self.current_pose = MyPose()
-        self.curret_junction = 'C' # sys.argv[1]
-        # assert self.curret_junction in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L'], 'Questo incrocio non esiste. Scegli fra A B C D E F G H I o L'
+        self.curret_junction = sys.argv[1]
+        assert self.curret_junction in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L'], 'Questo incrocio non esiste. Scegli fra A B C D E F G H I o L'
         self.junctions = Junctions()
         self.in_junction = True
         self.last_checkpoint = [0,0]
         self.last_direction = 0
         self.not_initialized = True
-        self.kidnapped_published = False
+        self.kidnapped_published = True
         self.print_checkpoint()
+        self.kidnapped = False
 
     # --------------------------------------------------------------------------------
 
@@ -114,10 +115,9 @@ class Checkpoint(Node):
             x, y = old_junction_object._get_bbox_point(direction)
             self.curret_junction = new_junction
             print(f'\nMid corridor - Entering the {self.curret_junction} zone.') 
-            self.last_checkpoint = [x, y]
-            self.last_direction = direction
-            # self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
-            self.print_checkpoint()
+            self.last_checkpoint = [self.current_pose.get_x(), self.current_pose.get_y()]
+            self.last_direction = self.yaw_to_direction(self.current_pose.get_yaw()).value
+            self.print_checkpoint(True)
 
 
 
@@ -137,9 +137,14 @@ class Checkpoint(Node):
         else:
             self.in_junction = True
 
-    def print_checkpoint(self): 
-        print(f'New checkpoint: x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {self.junctions.convert_directions(self.last_direction).name}')
-
+    def print_checkpoint(self, mid = False): 
+        junction = self.junctions.get_junction_by_point(self.last_checkpoint[0], self.last_checkpoint[1])
+        direction = self.junctions.convert_directions(self.last_direction).name
+        print(f'\nNew checkpoint: x = {self.last_checkpoint[0]}, y = {self.last_checkpoint[1]}, direction = {direction}')
+        if not mid: 
+            print(f'Posizionare all incrocio {junction} in direzione {direction}\n')
+        else: 
+            print(f'Posizionare prima di {junction} in direzione {direction}\n')
                 
 
     # Publishing and subscriber callbacks ----------------------------------------------
@@ -155,19 +160,23 @@ class Checkpoint(Node):
 
 
     def listener_callback_amcl(self, msg):
-        self.current_pose.set_pose_from_msg(msg)
-        self.initialize_checkpoint()
-        self.check_for_new_junction()
-        self.check_for_exit_from_junction()
+        if not self.kidnapped:
+            self.current_pose.set_pose_from_msg(msg)
+            print(f'Current pose: x = {self.current_pose.get_x()}, y = {self.current_pose.get_y()}')
+            self.initialize_checkpoint()
+            self.check_for_new_junction()
+            self.check_for_exit_from_junction()
 
-    def listener_callback_kidnapped(self, msg): 
+    def listener_callback_kidnapped(self, msg):
+        # print("Letto")
+        self.kidnapped = msg.is_kidnapped
         if msg.is_kidnapped:
-            if self.kidnapped_published: 
+            self.kidnapped_published = False
+        else:
+            if not self.kidnapped_published: 
                 print(f'Kidnapped {str(msg.is_kidnapped)}')
                 self.publish_checkpoint()
                 self.kidnapped_published = True
-        else: 
-            self.kidnapped_published = False
 
         
 

@@ -29,8 +29,8 @@ class JunctionPoint():
         
 
     def is_in_bbox(self, x, y, offset_type=None): 
-        # if offset_type is None: 
-        #     offset_type = OffsetDetection
+        if offset_type is None: 
+            offset_type = OffsetDetection
         assert offset_type in [OffsetDetection, OffsetsRecovery, OffsetsEndpoint, None], 'L\'offset deve essere un\'istanza di OffsetDetection, OffsetRecovery o OffsetEndpoint'
         result = True
         if not x < self.get_bbox_x(TurtleBot4Directions.SOUTH, offset_type): 
