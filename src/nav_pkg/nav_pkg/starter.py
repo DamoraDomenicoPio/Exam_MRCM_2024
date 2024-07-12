@@ -35,7 +35,7 @@ def main(args=None):
     print('Test object created')
 
     while True: 
-        print('Press enter to send a STRAIGHTON, write the desidered signal otherwise:')
+        print('\nPress enter to send a STRAIGHTON or write the signal:')
         sign = input('Signal = ')
         print(f'Sign = {sign}')
         minimal_publisher.publish_straighton(sign)
